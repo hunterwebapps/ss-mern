@@ -1,0 +1,20 @@
+﻿.clickable {
+    cursor: pointer;
+}
+
+.margin-top {
+    margin-top: 15px;
+}
+.margin-bottom {
+    margin-bottom: 15px;
+}
+.no-margin {
+    margin: 0 !important;
+}
+
+.bg-white {
+    background-color: #fff;
+}
+.bg-gray {
+    background-color: #f5f5f5;
+}
