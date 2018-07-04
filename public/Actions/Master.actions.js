@@ -22,25 +22,26 @@ export const IsLoading =
     });
 
 export const RequestStarting =
-    (apiMethod, data) => ({
+    (apiMethod, apiData, actionType) => ({
         type: REQUEST_START,
         payload: {
             apiMethod,
-            data
+            apiData,
+            actionType
         }
     });
 
 export const RequestSuccessful =
-    data => ({
+    (data, actionType) => ({
         type: REQUEST_SUCCESS,
-        payload: data
+        payload: {
+            data,
+            actionType
+        }
     });
 
 export const RequestFailure =
-    (message, data) => ({
+    data => ({
         type: REQUEST_FAILED,
-        payload: {
-            message,
-            data
-        }
+        payload: data
     });

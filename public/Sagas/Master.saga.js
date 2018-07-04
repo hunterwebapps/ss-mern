@@ -1,138 +1,69 @@
 ﻿import API from '../API';
+import { push } from 'react-router-redux';
 import { call, put } from 'redux-saga/effects';
-import {
-    IsLoading, ShowError,
-    RequestStarting, RequestSuccessful, RequestFailure
-} from '../Actions/Master.actions';
-import {
-    SET_ERROR, SET_USER, SET_COUNTRIES, SET_TIMEZONES,
-    ADD_USER, ADD_PAGE, ADD_CLIENT, ADD_PACKAGE_TYPE, ADD_OPERATING_LOCATION, ADD_CONTACT_INFO, ADD_ADDRESS,
-    OK, CREATED, BAD_REQUEST, NOT_FOUND, ERROR
-} from '../Actions/Types.actions';
+import * as MasterActions from '../Actions/Master.actions';
+import * as AddressesActions from '../Actions/Addresses.actions';
+import * as UsersActions from '../Actions/Users.actions';
+import * as PackagesActions from '../Actions/Packages.actions';
+import * as PagesActions from '../Actions/Pages.actions';
+import * as OperatingLocationsActions from '../Actions/OperatingLocation.actions';
+import * as ClientsActions from '../Actions/Clients.actions';
+import * as TYPES from '../Actions/Types.actions';
 
-export function* Initialize(action) {
-    yield put(IsLoading(true));
+export function* InitializeStateSaga(action) {
+    yield put(MasterActions.IsLoading(true));
 
-    const { payload } = action;
-    const user = yield call(API.User.Initialize);
-    if (user === undefined) {
-        if (payload === 'Manager') {
-            window.location.href = '/User/Login';
+    // Get anonymous user state
+    yield put(AddressesActions.GetCountries());
+    yield put(AddressesActions.GetTimezones());
+
+    // Get Bearer Token, Authenticate, and return User object
+    const res = yield call(API.User.Initialize);
+    if (res === undefined) {
+        // If token doesn't exist and request is from Manager view, redirect to login
+        if (action.payload === 'Manager') {
+            yield put(push('/User/Login'));
+            return;
         }
-    }
-    else if (user.status === 200) {
-        yield put({ type: SET_USER, payload: user.data });
-        const { Administrator, Superuser } = user.data;
-
-        const countries = yield call(API.Address.GetCountries);
-        if (countries.status === 200) {
-            yield put({ type: SET_COUNTRIES, payload: countries.data });
-        }
-        else { put(ShowError(countries)); }
-
-        const timezones = yield call(API.Address.GetTimezones);
-        if (timezones.status === 200) {
-            yield put({ type: SET_TIMEZONES, payload: timezones.data });
-        }
-        else { put(ShowError(timezones)); }
-
-        const contactInfo = yield call(API.User.GetContactInfo);
-        if (contactInfo.status === 200) {
-            yield put({ type: ADD_CONTACT_INFO, payload: contactInfo.data });
-        }
-        else { put(ShowError(contactInfo)); }
-
-        const addresses = yield call(API.Address.Get);
-        if (addresses.status === 200) {
-            yield put({ type: ADD_ADDRESS, payload: addresses.data });
-        }
-        else { put(ShowError(addresses)); }
+    } else if (res.status === TYPES.HTTP_OK) {
+        // Get basic user state
+        yield put({ type: TYPES.SET_USER, payload: res.data });
 
         yield InitializeUser();
 
-        if (Administrator || Superuser) {
+        // If admin/superuser get admin authorized state
+        if (res.data.Administrator || res.data.Superuser) {
             yield InitializeAdministrator();
         }
 
-        if (Superuser) {
+        // If superuser get superuser authorized state
+        if (res.data.Superuser) {
             yield InitializeSuperuser();
         }
     } else {
-        yield put(ShowError(user));
+        yield put(MasterActions.ShowError(user));
     }
 
-    yield put(IsLoading(false));
+    yield put(MasterActions.IsLoading(false));
 }
 
 function* InitializeUser() {
-    const packageTypes = yield call(API.PackageType.Get);
-    if (packageTypes.status === 200) {
-        yield put({ type: ADD_PACKAGE_TYPE, payload: packageTypes.data });
-    } else {
-        yield put(ShowError(packageTypes));
-    }
+    yield put(PackagesActions.GetPackageTypes());
 }
 
 function* InitializeAdministrator() {
-    const users = yield call(API.User.Get);
-    if (users.status === 200) {
-        yield put({ type: ADD_USER, payload: users.data });
-    } else {
-        yield put(ShowError(users));
-    }
-
-    const pages = yield call(API.Page.Get);
-    if (pages.status === 200) {
-        yield put({ type: ADD_PAGE, payload: pages.data });
-    } else {
-        yield put(ShowError(pages));
-    }
-
-    const locations = yield call(API.OperatingLocation.Get);
-    if (locations.status === 200) {
-        yield put({ type: ADD_OPERATING_LOCATION, payload: locations.data });
-    }
-    else { yield put(ShowError(locations)); }
+    yield put(AddressesActions.GetAddresses());
+    yield put(UsersActions.GetUsers());
+    yield put(UsersActions.GetContacts());
+    yield put(OperatingLocationsActions.GetAllOperatingLocations());
 }
 
 function* InitializeSuperuser() {
-    const clients = yield call(API.Client.Get);
-    if (clients.status === 200) {
-        yield put({ type: ADD_CLIENT, payload: clients.data });
-    } else {
-        yield put(ShowError(clients));
-    }
+    yield put(PagesActions.GetPages());
+    yield put(ClientsActions.GetClients());
 }
 
-export function* RequestStart(action) {
-    const { apiMethod, data } = action.payload;
-
-    const res = yield call(apiMethod, data);
-
-    switch (res.status) {
-        case OK:
-        case CREATED:
-            yield put(RequestSuccessful(res.data));
-            break;
-        case BAD_REQUEST:
-        case NOT_FOUND:
-            yield put(RequestFailure(res.data));
-            break;
-        case ERROR:
-        default:
-            yield put(ShowError(res));
-    }
-}
-
-export function* RequestSuccess() {
-    const { data } = action.payload;
-}
-
-export function* RequestFailed(action) {
-    const { message, data } = action.payload;
-}
-
-export function* CreateError(action) {
+export function* CreateErrorSaga(action) {
     const { payload } = action;
     yield console.log("Create Error Saga", action);
     let error = {
@@ -146,5 +77,5 @@ export function* CreateError(action) {
         if (payload.exception) error.Details.push(payload.exception);
     } else { error = payload }
 
-    yield put({ type: SET_ERROR, payload: error });
+    yield put({ type: TYPES.SET_ERROR, payload: error });
 }

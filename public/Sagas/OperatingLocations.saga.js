@@ -1,14 +1,26 @@
 ﻿import API from '../API';
 import { call, put } from 'redux-saga/effects';
 import { IsLoading, ShowError } from '../Actions/Master.actions';
-import { SET_ALL_OPERATING_LOCATIONS, ADD_OPERATING_LOCATION } from '../Actions/Types.actions';
+import * as TYPES from '../Actions/Types.actions';
 
-export function* GetAllOperatingLocations(action) {
-    const locations = yield call(API.OperatingLocation.GetAll);
-    yield put({ type: SET_ALL_OPERATING_LOCATIONS, payload: locations });
+export const getOperatingLocationsCount = state => state.operatingLocations.all.length;
+
+export function* GetAllOperatingLocationsSaga(action) {
+    // If Operating Locations Already Loaded, Return;
+    const locationsCount = yield select(getOperatingLocationsCount);
+    if (locationsCount > 0) return;
+
+    // API Call GetOperatingLocations
+    const res = yield call(API.OperatingLocation.Get);
+    if (res.status === TYPES.HTTP_OK) {
+        // If Response 200 Set Operating Loations in State
+        yield put({ type: TYPES.ADD_OPERATING_LOCATION, payload: res.data });
+    } else {
+        yield put(MasterActions.ShowError(locations));
+    }
 }
 
-export function* CreateOperatingLocation(action) {
+export function* CreateOperatingLocationSaga(action) {
     yield put(IsLoading(true));
 
     const { payload } = action;

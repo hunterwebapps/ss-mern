@@ -10,6 +10,7 @@ export const
 
 // Clients
 export const
+    GET_CLIENTS = 'GET_CLIENTS',
     CREATE_CLIENT = 'CREATE_CLIENT',
     ADD_CLIENT = 'ADD_CLIENT';
 
@@ -19,11 +20,13 @@ export const
     LOGIN_USER = 'LOGIN_USER',
     LOGOUT_USER = 'LOGOUT_USER',
     CREATE_USER = 'CREATE_USER',
+    GET_USERS = 'GET_USERS',
     SET_USER = 'SET_USER',
     ADD_USER = 'ADD_USER',
     REGISTER_USER = 'REGISTER_USER',
     CREATE_USER_TYPE = 'CREATE_USER_TYPE',
     ADD_USER_TYPE = 'ADD_USER_TYPE',
+    GET_CONTACT_INFO = 'GET_CONTACT_INFO',
     ADD_CONTACT_INFO = 'ADD_CONTACT_INFO';
 
 // Sprints
@@ -49,7 +52,8 @@ export const
 
 // Addresses
 export const
-    ADD_ADDRESS = 'ADD_ADDRESS',
+    GET_ADDRESSES = 'GET_ADDRESSES',
+    ADD_ADDRESSES = 'ADD_ADDRESSES',
     GET_COUNTRIES = 'GET_COUNTRIES',
     SET_COUNTRIES = 'SET_COUNTRIES',
     GET_TIMEZONES = 'GET_TIMEZONES',
@@ -57,6 +61,7 @@ export const
 
 // Pages
 export const
+    GET_PAGES = 'GET_PAGES',
     CREATE_PAGE = 'CREATE_PAGE',
     ADD_PAGE = 'ADD_PAGE';
 
@@ -72,8 +77,8 @@ export const
 
 // HTTP Status Codes
 export const
-    OK = 200,
-    CREATED = 201,
-    BAD_REQUEST = 400,
-    NOT_FOUND = 404,
-    ERROR = 500
+    HTTP_OK = 200,
+    HTTP_CREATED = 201,
+    HTTP_BAD_REQUEST = 400,
+    HTTP_NOT_FOUND = 404,
+    HTTP_ERROR = 500

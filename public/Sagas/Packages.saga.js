@@ -1,15 +1,26 @@
 ﻿import API from '../API';
 import { call, put } from 'redux-saga/effects';
-import { IsLoading, ShowError } from '../Actions/Master.actions';
-import { ADD_PACKAGE_TYPE } from '../Actions/Types.actions';
+import * as MasterActions from '../Actions/Master.actions';
+import * as TYPES from '../Actions/Types.actions';
 
-export function* CreatePackageType(action) {
-    const { payload } = action;
-    const packageType = yield call(API.PackageType.Create, payload);
-    if (packageType.status === 201) {
-        yield put({ type: ADD_PACKAGE_TYPE, payload: packageType.data });
+export function* CreatePackageTypeSaga(action) {
+    yield put(MasterActions.IsLoading(true));
+
+    const res = yield call(API.PackageType.Create, action.payload);
+    if (res.status === TYPES.HTTP_CREATED) {
+        yield put({ type: TYPES.ADD_PACKAGE_TYPE, payload: res.data });
     } else {
-        yield put(ShowError(packageType));
+        yield put(MasterActions.ShowError(packageType));
     }
-    
+
+    yield put(MasterActions.IsLoading(false));
+}
+
+export function* GetPackageTypesSaga() {
+    const res = yield call(API.PackageType.Get);
+    if (res.status === TYPES.HTTP_OK) {
+        yield put({ type: TYPES.ADD_PACKAGE_TYPE, payload: res.data });
+    } else {
+        yield put(MasterActions.ShowError(packageTypes));
+    }
 }

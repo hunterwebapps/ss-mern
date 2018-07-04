@@ -1,11 +1,11 @@
-﻿import { AUTHENTICATE, CREATE_USER, REGISTER_USER, CREATE_USER_TYPE, LOGOUT_USER } from './Types.actions';
+﻿import * as TYPES from './Types.actions';
 
 //import { normalize } from 'normalizr';
 //import { User, allUsers } from '../Schema';
 
 export const Authenticate =
     ({ Username, Password, RememberMe }) => ({
-        type: AUTHENTICATE,
+        type: TYPES.AUTHENTICATE,
         payload: {
             Username,
             Password,
@@ -15,7 +15,7 @@ export const Authenticate =
 
 export const Register =
     ({ Username, EmailAddress, Password, ConfirmPassword }) => ({
-        type: REGISTER_USER,
+        type: TYPES.REGISTER_USER,
         payload: {
             Username,
             EmailAddress,
@@ -26,12 +26,12 @@ export const Register =
 
 export const Logout =
     () => ({
-        type: LOGOUT_USER
+        type: TYPES.LOGOUT_USER
     });
 
 export const CreateUser =
     ({ User, Driver, Customer, Password }) => ({
-        type: CREATE_USER,
+        type: TYPES.CREATE_USER,
         payload: {
             user: User,
             driver: Driver,
@@ -42,6 +42,16 @@ export const CreateUser =
 
 export const CreateUserType =
     normalizedUserTypeForm => ({
-        type: CREATE_USER_TYPE,
+        type: TYPES.CREATE_USER_TYPE,
         payload: normalizedUserTypeForm
+    });
+
+export const GetUsers =
+    () => ({
+        type: TYPES.GET_USERS
+    });
+
+export const GetContacts =
+    () => ({
+        type: TYPES.GET_CONTACT_INFO
     });

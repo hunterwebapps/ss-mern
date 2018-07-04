@@ -1,7 +1,12 @@
-﻿import { CREATE_PAGE } from './Types.actions';
+﻿import * as TYPES from './Types.actions';
 
 export const CreatePage =
     normalizedPageData => ({
-        type: CREATE_PAGE,
+        type: TYPES.CREATE_PAGE,
         payload: normalizedPageData
+    });
+
+export const GetPages =
+    () => ({
+        type: TYPES.GET_PAGES
     });

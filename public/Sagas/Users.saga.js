@@ -1,53 +1,54 @@
 ﻿import API from '../API';
 import { call, put, select } from 'redux-saga/effects';
-import { ShowError, IsLoading } from '../Actions/Master.actions';
-import { SET_USER, ADD_USER, ADD_USER_TYPE } from '../Actions/Types.actions';
-import { getCountryByID } from './Addresses.saga';
+import { push } from 'react-router-redux';
+import * as MasterActions from '../Actions/Master.actions';
+import * as AddressesSaga from './Addresses.saga';
+import * as TYPES from '../Actions/Types.actions';
+import { effects } from 'redux-saga';
 
 // Selectors
 export const getCurrentUser = state => state.users.user;
+export const getUsersCount = state => state.users.all.length;
+
+export const getContactsCount = state => state.users.contacts.length;
 
 // Sagas
-
 export function* LoginSaga(action) {
-    //yield put(IsLoading(true));
-    const { payload } = action;
-    const res = yield call(API.User.Login, payload);
-    yield console.log("Login Saga Response", res);
-    if (res.status === 200) {
+    yield put(MasterActions.IsLoading(true));
+    
+    const res = yield call(API.User.Login, action.payload);
+    if (res.status === TYPES.HTTP_OK) {
+        // If Admin/Superuser, Redirect to Control Tower
         if (res.data.Administrator || res.data.Superuser) {
             window.location.href = "/ControlTower";
+            return;
         }
-        yield put({ type: SET_USER, payload: res.data });
+        yield put({ type: TYPES.SET_USER, payload: res.data });
+        yield put(push('/User/Manager'));
     } else {
-        yield ShowError(res);
+        yield put(MasterActions.ShowError(res));
     }
-    //yield put(IsLoading(false));
+
+    yield put(IsLoading(false));
 }
 
 export function* RegisterSaga(action) {
-    console.log("Register Saga", action);
-    //yield put(IsLoading(true));
-    const { payload } = action;
-    const res = yield call(API.User.Register, payload);
+    yield put(MasterActions.IsLoading(true));
+
+    const res = yield call(API.User.Register, action.payload);
     if (res.status === 201) {
-        yield console.log("Register Saga Response", res);
-        yield put({ type: SET_USER, payload: res.data });
+        yield put({ type: TYPES.SET_USER, payload: res.data });
+        yield put(push('/User/Manager'));
     } else {
-        yield ShowError(res);
+        yield put(ShowError(res));
     }
 
-    //yield put(IsLoading(false));
+    yield put(MasterActions.IsLoading(false));
 }
 
-export function* LogoutSaga(action) {
-    //yield put(IsLoading(true));
-    yield put({
-        type: SET_USER,
-        payload: null
-    });
+export function* LogoutSaga() {
+    yield put({ type: SET_USER, payload: null });
     yield call(API.User.Logout);
-    //yield put(IsLoading(false));
 }
 
 export function* ForgotSaga(action) {
@@ -56,22 +57,56 @@ export function* ForgotSaga(action) {
     //yield put(IsLoading(false));
 }
 
-export function* CreateUser(action) {
-    const { payload } = action;
-    const res = yield call(API.User.Create, payload);
-    if (res.data.success) {
-        yield put({ type: ADD_USER, payload: res.data.user });
+export function* CreateUserSaga(action) {
+    yield put(MasterActions.IsLoading(true));
+
+    const res = yield call(API.User.Create, action.payload);
+    if (res.status === TYPES.HTTP_CREATED) {
+        yield put({ type: TYPES.ADD_USER, payload: res.data });
     } else {
-        yield console.log("Create User Saga Fail", res, payload);
+        yield put(MasterActions.ShowError(res));
+    }
+
+    yield put(MasterActions.IsLoading(false));
+}
+
+export function* CreateUserTypeSaga(action) {
+    yield put(MasterActions.IsLoading(true));
+
+    const res = yield call(API.User.CreateType, action.payload);
+    if (res.status === TYPES.HTTP_CREATED) {
+        yield put({ type: TYPES.ADD_USER_TYPE, payload: res.data });
+    } else {
+        yield put(MasterActions.ShowError(res));
+    }
+
+    yield put(MasterActions.IsLoading(false));
+}
+
+export function* GetUsersSaga() {
+    // If Users Already Loaded, Return
+    const userCount = yield select(getUsersCount);
+    if (userCount > 0) return;
+
+    // API Call GetUsers
+    const res = yield call(API.User.Get);
+    if (res.status === TYPES.HTTP_OK) {
+        yield put({ type: TYPES.ADD_USER, payload: res.data });
+    } else {
+        yield put(MasterActions.ShowError(res));
     }
 }
 
-export function* CreateUserType(action) {
-    const { payload } = action;
-    const res = yield call(API.User.CreateType, payload);
-    if (res.data.success) {
-        yield put({ type: ADD_USER_TYPE, payload: res.data.userType });
+export function* GetContactsSaga() {
+    // If Contacts Already Loaded, Return
+    const contactCount = yield select(getContactsCount);
+    if (contactCount > 0) return;
+
+    // API Call GetContacts
+    const res = yield call(API.User.GetContactInfo);
+    if (res.status === TYPES.HTTP_OK) {
+        yield put({ type: TYPES.ADD_CONTACT_INFO, payload: res.dat });
     } else {
-        yield console.log("Create User Type Error", res);
+        yield put(MasterActions.ShowError(res));
     }
 }

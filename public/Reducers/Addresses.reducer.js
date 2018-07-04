@@ -1,4 +1,4 @@
-﻿import { SET_COUNTRIES, SET_TIMEZONES, ADD_ADDRESS } from '../Actions/Types.actions';
+﻿import { SET_COUNTRIES, SET_TIMEZONES, ADD_ADDRESSES } from '../Actions/Types.actions';
 
 const initialState = {
     all: [],
@@ -24,7 +24,7 @@ export default (state = initialState, action) => {
                 timezones: payload
             };
             return state;
-        case ADD_ADDRESS:
+        case ADD_ADDRESSES:
             state = {
                 ...state,
                 all: [

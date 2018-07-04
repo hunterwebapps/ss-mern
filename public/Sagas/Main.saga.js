@@ -1,58 +1,49 @@
 ﻿import { takeLatest, takeEvery } from 'redux-saga/effects';
-import {
-    INITIALIZE, AUTHENTICATE, REGISTER_USER, CREATE_USER, CREATE_USER_TYPE, LOGOUT_USER,
-    GET_ALL_OPERATING_LOCATIONS, CREATE_OPERATING_LOCATION,
-    CREATE_PACKAGE_TYPE,
-    GET_COUNTRIES,
-    CREATE_CLIENT,
-    CREATE_PAGE,
-    CREATE_ADDON,
-    CREATE_ERROR,
-    REQUEST_SUCCESS,
-    REQUEST_START,
-    REQUEST_FAILED
-} from '../Actions/Types.actions';
+import * as TYPES from '../Actions/Types.actions';
 
-import { Initialize, RequestStart, RequestSuccess, RequestFailed, CreateError } from './Master.saga';
-import { GetAllOperatingLocations, CreateOperatingLocation } from './OperatingLocations.saga';
-import { CreatePackageType } from './Packages.saga';
-import { GetCountries } from './Addresses.saga';
-import { CreateClient } from './Clients.saga';
-import { CreateUser, LoginSaga, LogoutSaga, RegisterSaga, CreateUserType } from './Users.saga';
-import { CreatePageSaga } from './Pages.saga';
-import { CreateAddonSaga } from './Sprints.saga';
+import * as MasterSaga from './Master.saga';
+import * as OperatingLocationsSaga from './OperatingLocations.saga';
+import * as PackagesSaga from './Packages.saga';
+import * as AddressesSaga from './Addresses.saga';
+import * as ClientsSaga from './Clients.saga';
+import * as UsersSaga from './Users.saga';
+import * as PagesSaga from './Pages.saga';
+import * as SprintsSaga from './Sprints.saga';
 
 export default function* mySaga() {
     // Master
-    yield takeLatest(INITIALIZE, Initialize);
-    yield takeLatest(CREATE_ERROR, CreateError);
-    yield takeEvery(REQUEST_START, RequestStart);
-    yield takeEvery(REQUEST_SUCCESS, RequestSuccess);
-    yield takeEvery(REQUEST_FAILED, RequestFailed);
+    yield takeLatest(TYPES.INITIALIZE, MasterSaga.InitializeStateSaga);
+    yield takeLatest(TYPES.CREATE_ERROR, MasterSaga.CreateErrorSaga);
 
     // Operating Locations
-    yield takeLatest(GET_ALL_OPERATING_LOCATIONS, GetAllOperatingLocations);
-    yield takeLatest(CREATE_OPERATING_LOCATION, CreateOperatingLocation);
+    yield takeLatest(TYPES.GET_ALL_OPERATING_LOCATIONS, OperatingLocationsSaga.GetAllOperatingLocationsSaga);
+    yield takeLatest(TYPES.CREATE_OPERATING_LOCATION, OperatingLocationsSaga.CreateOperatingLocationSaga);
 
     // Packages
-    yield takeLatest(CREATE_PACKAGE_TYPE, CreatePackageType);
+    yield takeLatest(TYPES.CREATE_PACKAGE_TYPE, PackagesSaga.CreatePackageTypeSaga);
+    yield takeLatest(TYPES.GET_PACKAGE_TYPES, PackagesSaga.GetPackageTypesSaga);
 
     // Addresses
-    yield takeLatest(GET_COUNTRIES, GetCountries);
+    yield takeLatest(TYPES.GET_COUNTRIES, AddressesSaga.GetCountriesSaga);
+    yield takeLatest(TYPES.GET_TIMEZONES, AddressesSaga.GetTimezonesSaga);
 
     // Clients
-    yield takeLatest(CREATE_CLIENT, CreateClient);
+    yield takeLatest(TYPES.CREATE_CLIENT, ClientsSaga.CreateClientSaga);
+    yield takeLatest(TYPES.GET_CLIENTS, ClientsSaga.GetClients);
 
     // Users
-    yield takeLatest(AUTHENTICATE, LoginSaga);
-    yield takeLatest(REGISTER_USER, RegisterSaga);
-    yield takeLatest(LOGOUT_USER, LogoutSaga)
-    yield takeLatest(CREATE_USER, CreateUser);
-    yield takeLatest(CREATE_USER_TYPE, CreateUserType);
+    yield takeLatest(TYPES.AUTHENTICATE, UsersSaga.LoginSaga);
+    yield takeLatest(TYPES.REGISTER_USER, UsersSaga.RegisterSaga);
+    yield takeLatest(TYPES.LOGOUT_USER, UsersSaga.LogoutSaga)
+    yield takeLatest(TYPES.CREATE_USER, UsersSaga.CreateUserSaga);
+    yield takeLatest(TYPES.CREATE_USER_TYPE, UsersSaga.CreateUserTypeSaga);
+    yield takeLatest(TYPES.GET_USERS, UsersSaga.GetUsersSaga);
+    yield takeLatest(TYPES.GET_CONTACT_INFO, UsersSaga.GetContactsSaga);
 
     // Pages
-    yield takeLatest(CREATE_PAGE, CreatePageSaga);
+    yield takeLatest(TYPES.CREATE_PAGE, PagesSaga.CreatePageSaga);
+    yield takeLatest(TYPES.GET_PAGES, PagesSaga.GetPages);
 
-    // Addons
-    yield takeLatest(CREATE_ADDON, CreateAddonSaga);
+    // Sprints
+    yield takeLatest(TYPES.CREATE_ADDON, SprintsSaga.CreateAddonSaga);
 }

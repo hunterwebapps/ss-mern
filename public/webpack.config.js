@@ -2,7 +2,7 @@
  * DESCRIPTION: Webpack Config for ReactJS Redux w/ NPM Install Instructions
  * Create Scripts Subfolder "React"
  * npm init ~/Scripts/React/
- * npm i --save react react-dom react-router-dom prop-types axios redux react-redux redux-saga react-bootstrap react-transition-group lodash reselect redux-form
+ * npm i --save react react-dom react-router-dom prop-types axios redux react-redux redux-saga react-bootstrap react-transition-group lodash reselect redux-form react-router-redux
  * npm i --save-dev babel-core babel-loader webpack webpack-cli babel-preset-env babel-preset-react babel-plugin-transform-class-properties babel-plugin-transform-object-rest-spread babel-polyfill webpack-node-externals
  * Add to package.json "scripts"=>"dev": "webpack --config webpack.config.js --mode development -w", "build": "webpack --config webpack.config.js --mode production"
  * Create react.js Entry Point
