@@ -4,9 +4,10 @@ import { connect } from 'react-redux';
 import { reduxForm, Field, FieldArray } from 'redux-form';
 import { Button, FormGroup, FormControl, ControlLabel, HelpBlock, Row, Col, Tab, Nav, NavItem } from 'react-bootstrap';
 
-import { CreateOperatingLocation } from '../../Actions/OperatingLocation.actions';
-import { getOperatingLocations } from '../../Reducers/Main.reducer';
-import { NormalizeOperatingLocationForm, NormalizeCodeField } from '../../NormalizeObjects';
+import { CreateOperatingLocation } from '../../Modules/OperatingLocations/OperatingLocations.actions';
+import { IsLoading, ShowError } from '../../Modules/Master/Master.actions';
+import { getOperatingLocations } from '../../Main.reducer';
+import { NormalizeOperatingLocationForm, NormalizeCodeField, NormalizeDecimalField } from '../../NormalizeObjects';
 
 import { TextboxRender, SelectRender, InputListRender, CheckboxRender, DateTimeRender, TextareaRender, AddressRender } from '../ReduxFormRender';
 
@@ -15,48 +16,134 @@ const validate = values => {
 
     if (!values.Code) errors.Code = 'Required';
     if (values.Code && values.Code.length > 10) errors.Code = 'Max 10 Characters';
+
     if (!values.Company) errors.Company = 'Required';
     if (values.Company && values.Company.length > 100) errors.Company = 'Max 100 Characters';
+
     if (values.FirstName && values.FirstName.length > 100) errors.FirstName = 'Max 100 Characters';
     if (values.LastName && values.LastName.length > 100) errors.LastName = 'Max 100 Characters';
+
     if (!values.Address1) errors.Address1 = 'Required';
     if (values.Address1 && values.Address1.length > 200) errors.Address1 = 'Max 200 Characters';
+
     if (values.Address2 && values.Address2.length > 200) errors.Address2 = 'Max 200 Characters';
+
     if (!values.City) errors.City = 'Required';
     if (values.City && values.City.length > 60) errors.City = 'Max 60 Characters';
+
     if (!values.State) errors.State = 'Required';
     if (values.State && values.State.length > 30) errors.State = 'Max 30 Characters';
+
     if (!values.PostalCode) errors.PostalCode = 'Required';
     if (values.PostalCode && values.PostalCode.length > 15) errors.PostalCode = 'Max 15 Characters';
+
     if (!values.Country) errors.Country = 'Required';
     if (!values.Timezone) errors.Timezone = 'Required';
+
     if (!values.Longitude) errors.Longitude = 'Required';
     if (values.Longitude && values.Longitude.length > 22) errors.Longitude = 'Max 22 Characters';
+
     if (!values.Latitude) errors.Latitude = 'Required';
     if (values.Latitude && values.Latitude.length > 22) errors.Latitude = 'Max 22 Characters';
+
     if (!values.MinutesPerMile) errors.MinutesPerMile = 'Required';
     if (!values.MinutesPerStop) errors.MinutesPerStop = 'Required';
-    //if (!values.Zones) errors.Zones = 'Required';
+
+    if (values.Zones) {
+        let zonePostalCodes = [];
+        for (let i = 0; i < values.Zones.length; i++) {
+            const zone = values.Zones[i];
+            if (zone.PostalCode) {
+                if (zonePostalCodes.includes(zone.PostalCode)) {
+                    errors.Zones = `Duplicate Postal Code: ${zone.PostalCode}`;
+                    break;
+                }
+                zonePostalCodes.push(zone.PostalCode);
+            }
+        }
+    }
 
     return errors;
 }
 
-let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting, operatingLocations, countries, timezones, packageTypes }) => {
+let OperatingLocationForm = ({
+    operatingLocations,
+    CreateOperatingLocation,
+    IsLoading,
+    array,
+    handleSubmit,
+    packageTypes,
+    countries,
+    timezones,
+    addons
+}) => {
     const createOperatingLocation = values => {
-        let locationExists = false;
-        operatingLocations.forEach(location => {
-            if (location.Code === values.Code) return false;
-            if (location.ContactInfo.Address.PostalCode === values.PostalCode) return false;
-        });
+        for (let i = 0; i < operatingLocations.length; i++) {
+            const location = operatingLocations[i];
 
-        const normalizedLocationData = NormalizeOperatingLocationForm(values);
-        CreateOperatingLocation(normalizedLocationData);
+            if (location.Code === values.Code)
+                ShowError({
+                    message: 'Operating Location Exists',
+                    exception: `The CODE '${location.Code}' already exists`
+                });
+
+            if (location.Contact.Address.PostalCode === values.PostalCode)
+                ShowError({
+                    message: 'Operating Location Exists',
+                    exception: `A Location for '${location.PostalCode}' already exists`
+                });
+
+            return false;
+        }
+
+        CreateOperatingLocation({
+            Code: values.Code,
+            FirstName: values.FirstName,
+            LastName: values.LastName,
+            Company: values.Company,
+            Address1: values.Address1,
+            Address2: values.Address2,
+            City: values.City,
+            State: values.State,
+            PostalCode: values.PostalCode,
+            Country: values.Country,
+            Timezone: values.Timezone,
+            Latitude: values.Latitude,
+            Longitude: values.Longitude,
+            PhoneNumbers: values.PhoneNumbers,
+            EmailAddresses: values.EmailAddresses,
+            Website: values.Website,
+            MinutesPerMile: values.MinutesPerMile,
+            MinutesPerStop: values.MinutesPerStop,
+            Hours: values.WeekdayHours,
+            Holidays: values.SpecificHours,
+            Addons: values.Addons.map(a => a.Addon),
+            Notifications: values.Notifications,
+            Pricing: values.Pricing,
+            PackageType: values.PackageType,
+            LoadListSort: values.LoadListSort,
+            Zones: values.Zones
+        });
+    }
+
+    const parseZonesFile = e => {
+        const reader = new FileReader();
+        IsLoading(true);
+        reader.onload = () => {
+            const rows = reader.result.split(/\r?\n/);
+            rows.forEach((zone, index) => {
+                const values = zone.split(',');
+                array.insert('Zones', index, { ZoneNumber: values[0], PostalCode: values[1] });
+            });
+        }
+        reader.onerror = reader.onloadend = () => IsLoading(false);
+        reader.readAsText(e.target.files[0]);
     }
 
     return (
         <form onSubmit={handleSubmit(createOperatingLocation)}>
-            <Button type="submit" bsStyle="success" className="pull-right" disabled={submitting}>Submit</Button>
-            <Button type="reset" bsStyle="default" className="pull-right" disabled={submitting}>Reset</Button>
+            <Button type="submit" bsStyle="success" className="pull-right">Submit</Button>
+            <Button type="reset" bsStyle="default" className="pull-right">Reset</Button>
             <Tab.Container id="setupOperatingLocations" defaultActiveKey="location">
                 <Row className="clearfix">
                     <Col xs={12}>
@@ -86,18 +173,10 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                                             />
                                         </Row>
                                         <Row>
-                                            <Field
-                                                name="Company"
-                                                label="Company Name"
-                                                colWidths={{ sm: 9 }}
-                                                component={TextboxRender}
-                                            />
-                                        </Row>
-                                        <Row>
-                                            <Field name="DefaultPackageType" label="Default Package Type" colWidths={{ sm: 9 }} component={SelectRender}>
+                                            <Field name="PackageType" label="Default Package Type" colWidths={{ sm: 9 }} component={SelectRender}>
                                                 <option value="">Select a Default Package Type...</option>
                                                 {packageTypes.map(type =>
-                                                    <option key={type.PackageTypeID} value={type.PackageTypeID}>{type.Description}</option>
+                                                    <option key={type._id} value={type._id}>{type.Description}</option>
                                                 )}
                                             </Field>
                                         </Row>
@@ -185,22 +264,86 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                                     <FieldArray
                                         name="WeekdayHours"
                                         headers={[
-                                            { name: 'Weekday', label: 'Weekday', component: SelectRender },
-                                            { name: 'OpeningHour', label: 'Opening Hour', component: DateTimeRender },
-                                            { name: 'ClosingHour', label: 'Closing Hour', component: DateTimeRender }
+                                            {
+                                                name: 'Weekday',
+                                                label: 'Weekday',
+                                                component: SelectRender,
+                                                options: [
+                                                    '',
+                                                    'Monday',
+                                                    'Tuesday',
+                                                    'Wednesday',
+                                                    'Thursday',
+                                                    'Friday',
+                                                    'Saturday',
+                                                    'Sunday'].map(day =>
+                                                        <option key={day} value={day}>{day}</option>
+                                                    )
+                                            },
+                                            {
+                                                name: 'OpeningHour',
+                                                label: 'Opening Hour',
+                                                component: DateTimeRender,
+                                                componentProps: {
+                                                    dateFormat: false,
+                                                    timeFormat: 'HH:mm',
+                                                    defaultValue: ''
+                                                }
+                                            },
+                                            {
+                                                name: 'ClosingHour',
+                                                label: 'Closing Hour',
+                                                component: DateTimeRender,
+                                                componentProps: {
+                                                    dateFormat: false,
+                                                    timeFormat: 'HH:mm',
+                                                    defaultValue: ''
+                                                }
+                                            }
                                         ]}
-                                        colWidths={{ sm: 6 }}
+                                        colWidths={{ sm: 8 }}
                                         component={InputListRender}
                                     />
                                     <FieldArray
                                         name="SpecificHours"
                                         headers={[
-                                            { name: 'CalendarDate', label: 'Calendar Date', component: DateTimeRender },
-                                            { name: 'Closed', label: 'Closed', component: CheckboxRender },
-                                            { name: 'OpeningHour', label: 'Opening Hour', component: DateTimeRender },
-                                            { name: 'ClosingHour', label: 'Closing Hour', component: DateTimeRender }
+                                            {
+                                                name: 'CalendarDate',
+                                                label: 'Calendar Date',
+                                                component: DateTimeRender,
+                                                componentProps: {
+                                                    dateFormat: 'MM/DD/YYYY',
+                                                    timeFormat: false,
+                                                    defaultValue: ''
+                                                }
+                                            },
+                                            {
+                                                name: 'Closed',
+                                                label: 'Closed',
+                                                component: CheckboxRender
+                                            },
+                                            {
+                                                name: 'OpeningHour',
+                                                label: 'Opening Hour',
+                                                component: DateTimeRender,
+                                                componentProps: {
+                                                    dateFormat: false,
+                                                    timeFormat: 'HH:mm',
+                                                    defaultValue: ''
+                                                }
+                                            },
+                                            {
+                                                name: 'ClosingHour',
+                                                label: 'Closing Hour',
+                                                component: DateTimeRender,
+                                                componentProps: {
+                                                    dateFormat: false,
+                                                    timeFormat: 'HH:mm',
+                                                    defaultValue: ''
+                                                }
+                                            }
                                         ]}
-                                        colWidths={{ sm: 6 }}
+                                        colWidths={{ sm: 8 }}
                                         component={InputListRender}
                                     />
                                 </Row>
@@ -210,7 +353,14 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                                     <Col sm={12}>
                                         <FormGroup controlId="zoneFile">
                                             <ControlLabel>Upload CSV</ControlLabel>
-                                            <FormControl name="zoneFile" type="file" label="Upload" accept="*.csv" className="text-muted clickable" />
+                                            <FormControl
+                                                name="zoneFile"
+                                                type="file"
+                                                label="Upload"
+                                                accept="*.csv"
+                                                className="text-muted clickable"
+                                                onChange={parseZonesFile}
+                                            />
                                             <HelpBlock>First Column "Zone Number", Second Column "Postal Codes"</HelpBlock>
                                         </FormGroup>
                                     </Col>
@@ -219,13 +369,21 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                                     <FieldArray
                                         name="Zones"
                                         headers={[
-                                            { name: 'ZoneNumber', label: 'Zone Number', component: TextboxRender },
-                                            { name: 'PostalCode', label: 'Postal Code', component: TextboxRender }
+                                            {
+                                                name: 'ZoneNumber',
+                                                label: 'Zone Number',
+                                                component: TextboxRender
+                                            },
+                                            {
+                                                name: 'PostalCode',
+                                                label: 'Postal Code',
+                                                component: TextboxRender
+                                            }
                                         ]}
                                         colWidths={{ sm: 6 }}
                                         component={InputListRender}
                                     />
-                                    <FieldArray
+                                    {/*<FieldArray
                                         name="Geopoints"
                                         headers={[
                                             { name: 'Geopoints', label: 'Geopoints', component: TextareaRender },
@@ -233,14 +391,27 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                                         ]}
                                         colWidths={{ sm: 6 }}
                                         component={InputListRender}
-                                    />
+                                    />*/}
                                 </Row>
                             </Tab.Pane>
                             <Tab.Pane eventKey="addons">
                                 <Row>
                                     <FieldArray
                                         name="Addons"
-                                        headers={[{ name: 'Addon', label: 'Addon', component: SelectRender }]}
+                                        headers={[
+                                            {
+                                                name: 'Addon',
+                                                label: 'Addon',
+                                                component: SelectRender,
+                                                options: [{ _id: '', Description: '' }]
+                                                    .concat(addons)
+                                                    .map(addon =>
+                                                        <option key={addon._id} value={addon._id}>
+                                                            {addon.Description}
+                                                        </option>
+                                                    )
+                                            }
+                                        ]}
                                         colWidths={{ sm: 6 }}
                                         component={InputListRender}
                                     />
@@ -249,8 +420,14 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                             <Tab.Pane eventKey="notifications">
                                 <Row>
                                     <FieldArray
-                                        name="EmailAddresses"
-                                        headers={[{ name: 'EmailAddress', label: 'Email Address', component: TextboxRender }]}
+                                        name="Notifications"
+                                        headers={[
+                                            {
+                                                name: 'EmailAddress',
+                                                label: 'Email Address',
+                                                component: TextboxRender
+                                            }
+                                        ]}
                                         colWidths={{ sm: 6 }}
                                         component={InputListRender}
                                     />
@@ -259,10 +436,29 @@ let OperatingLocationForm = ({ handleSubmit, CreateOperatingLocation, submitting
                             <Tab.Pane eventKey="pricing">
                                 <Row>
                                     <FieldArray
-                                        name="PackageTypes"
+                                        name="Pricing"
                                         headers={[
-                                            { name: 'PackageType', label: 'Package Type', component: SelectRender },
-                                            { name: 'Price', label: 'Price', component: TextboxRender }
+                                            {
+                                                name: 'PackageType',
+                                                label: 'Package Type',
+                                                component: SelectRender,
+                                                options:
+                                                    [{ _id: '', Description: '' }]
+                                                        .concat(packageTypes)
+                                                        .map(type =>
+                                                            <option key={type._id} value={type._id}>
+                                                                {type.Description}
+                                                            </option>
+                                                        )
+                                            },
+                                            {
+                                                name: 'Price',
+                                                label: 'Price',
+                                                component: TextboxRender,
+                                                componentProps: {
+                                                    normalize: NormalizeDecimalField(2)
+                                                }
+                                            }
                                         ]}
                                         colWidths={{ sm: 6 }}
                                         component={InputListRender}
@@ -295,11 +491,14 @@ const mapStateToProps = state => ({
     operatingLocations: getOperatingLocations(state),
     packageTypes: state.packages.types,
     countries: state.addresses.countries,
-    timezones: state.addresses.timezones
+    timezones: state.addresses.timezones,
+    addons: state.sprints.addons
 });
 
 const mapDispatchToProps = {
-    CreateOperatingLocation
+    CreateOperatingLocation,
+    IsLoading,
+    ShowError
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OperatingLocationForm);

@@ -1,9 +1,9 @@
 ﻿import { createStore, applyMiddleware, compose } from 'redux';
 import throttle from 'lodash/throttle';
-import rootReducer from './Reducers/Main.reducer';
+import rootReducer from './Main.reducer';
 import Logger from './Middleware/Logger';
 import { default as CreateSaga } from 'redux-saga';
-import mySaga from './Sagas/Main.saga';
+import mySaga from './Main.saga';
 
 import { LoadState, SaveState } from './SessionStorage';
 

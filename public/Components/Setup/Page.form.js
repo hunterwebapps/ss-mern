@@ -7,7 +7,8 @@ import { NormalizePageForm, NormalizeCodeField, NormalizeRelativeUrlField } from
 
 import { TextboxRender, SelectRender, CheckboxRender } from '../ReduxFormRender';
 
-import { CreatePage } from '../../Actions/Pages.actions';
+import { CreatePage } from '../../Modules/Pages/Pages.actions';
+import { ShowError } from '../../Modules/Master/Master.actions';
 
 const validate = values => {
     const errors = {};
@@ -15,23 +16,27 @@ const validate = values => {
     if (!values.Code) return errors.Code = 'Required';
     if (!values.Description) return errors.Description = 'Required';
     if (!values.Link) return errors.Link = 'Required';
-    
+
     return errors;
 }
 
-let PageForm = ({ handleSubmit, CreatePage, submitting, pages }) => {
+let PageForm = ({ handleSubmit, ShowError, CreatePage, submitting, pages }) => {
     const createPage = values => {
-        let pageExists = false;
-
         pages.forEach(page => {
             if (page.Code === values.Code) {
-                pageExists = true;
+                ShowError({
+                    message: 'Page Code Exists'
+                });
+                return;
             }
         });
 
-        if (!pageExists) {
-            CreatePage(NormalizePageForm(values));
-        }
+        CreatePage({
+            Code: values.Code,
+            Description: values.Description,
+            Link: values.Link,
+            Inactive: values.Inactive
+        });
     }
 
     return (
@@ -46,6 +51,7 @@ let PageForm = ({ handleSubmit, CreatePage, submitting, pages }) => {
                     component={TextboxRender}
                     tabIndex="1"
                     normalize={NormalizeCodeField}
+                    autoFocus
                 />
             </Row>
             <Row>
@@ -67,7 +73,7 @@ let PageForm = ({ handleSubmit, CreatePage, submitting, pages }) => {
         </form>
     );
 }
-    
+
 
 PageForm = reduxForm({
     form: 'PageForm',
@@ -77,7 +83,7 @@ PageForm = reduxForm({
 PageForm.displayName = 'Page Form';
 
 PageForm.propTypes = {
-    
+
 }
 
 const mapStateToProps = state => ({
@@ -85,7 +91,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-    CreatePage
+    CreatePage,
+    ShowError
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(PageForm);

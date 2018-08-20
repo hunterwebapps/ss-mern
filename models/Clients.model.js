@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const { AddressModel } = require('./Addresses.model');
 const {
     CLIENTS_TABLE, ADDRESSES_TABLE,
 } = require('../constants');
-
-const { AddressModel } = require('./Addresses.model');
 
 const ClientSchema = new Schema({
     Code: {
@@ -18,7 +17,7 @@ const ClientSchema = new Schema({
         LastName: String,
         JobTitle: String,
         Company: String,
-        Address: [AddressModel.schema],
+        Address: AddressModel.schema,
         PhoneNumbers: Array,
         EmailAddresses: Array
     },
@@ -34,10 +33,10 @@ const ClientSchema = new Schema({
 
 const ClientModel = mongoose.model(CLIENTS_TABLE, ClientSchema);
 
-const CodeExists = async code => await ClientModel.findOne({ Code: code }) !== null;
+const ClientCodeExists = async Code => await ClientModel.findOne({ Code }) !== null;
 
-const GetClientIDByCode = async code => {
-    const result = await ClientModel.findOne({ Code: code });
+const GetClientIDByCode = async Code => {
+    const result = await ClientModel.findOne({ Code });
     if (result) {
         return result._id;
     }
@@ -47,5 +46,5 @@ const GetClientIDByCode = async code => {
 module.exports = {
     ClientModel,
     GetClientIDByCode,
-    CodeExists
+    ClientCodeExists
 };

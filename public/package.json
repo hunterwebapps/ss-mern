@@ -1,45 +1,52 @@
 {
-  "name": "sprintship-react",
-  "version": "1.0.0",
-  "description": "SprintShip w/ ASP.NET MVC5 and ReactJS / Redux",
-  "main": "React.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "webpack --config webpack.config.js --mode development -w",
-    "build": "webpack --config webpack.config.js --mode production"
-  },
-  "author": "Dwayne Hunter",
-  "license": "UNLICENSED",
-  "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.4",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
-    "webpack": "^4.12.0",
-    "webpack-cli": "^3.0.6",
-    "webpack-node-externals": "^1.7.2"
-  },
-  "dependencies": {
-    "axios": "^0.18.0",
-    "jquery": "^3.3.1",
-    "lodash": "^4.17.10",
-    "moment": "^2.22.2",
-    "normalizr": "^3.2.4",
-    "prop-types": "^15.6.1",
-    "react": "^16.4.1",
-    "react-bootstrap": "^0.32.1",
-    "react-datetime": "^2.14.0",
-    "react-dom": "^16.4.1",
-    "react-redux": "^5.0.7",
-    "react-router-dom": "^4.3.1",
-    "react-router-redux": "^4.0.8",
-    "react-transition-group": "^2.3.1",
-    "redux": "^4.0.0",
-    "redux-form": "^7.4.2",
-    "redux-saga": "^0.16.0",
-    "reselect": "^3.0.1"
-  }
+    "name": "sprintship-react",
+    "version": "1.0.0",
+    "description": "SprintShip w/ ASP.NET MVC5 and ReactJS / Redux",
+    "main": "React.js",
+    "scripts": {
+        "test": "jest",
+        "dev": "webpack --config webpack.config.js --mode development -w",
+        "build": "webpack --config webpack.config.js --mode production"
+    },
+    "jest": {
+        "verbose": true,
+        "testURL": "http://localhost/"
+    },
+    "author": "Dwayne Hunter",
+    "license": "UNLICENSED",
+    "devDependencies": {
+        "babel-core": "^6.26.3",
+        "babel-loader": "^7.1.4",
+        "babel-plugin-syntax-dynamic-import": "^6.18.0",
+        "babel-plugin-transform-class-properties": "^6.24.1",
+        "babel-plugin-transform-object-rest-spread": "^6.26.0",
+        "babel-polyfill": "^6.26.0",
+        "babel-preset-env": "^1.7.0",
+        "babel-preset-react": "^6.24.1",
+        "webpack": "^4.12.0",
+        "webpack-bundle-analyzer": "^2.13.1",
+        "webpack-cli": "^3.0.6",
+        "webpack-node-externals": "^1.7.2"
+    },
+    "dependencies": {
+        "axios": "^0.18.0",
+        "jquery": "^3.3.1",
+        "lodash": "^4.17.10",
+        "moment": "^2.22.2",
+        "next": "^6.1.1",
+        "normalizr": "^3.2.4",
+        "prop-types": "^15.6.1",
+        "react": "^16.4.1",
+        "react-bootstrap": "^0.32.1",
+        "react-datetime": "^2.14.0",
+        "react-dom": "^16.4.1",
+        "react-redux": "^5.0.7",
+        "react-router-dom": "^4.3.1",
+        "react-router-redux": "^4.0.8",
+        "react-transition-group": "^2.3.1",
+        "redux": "^4.0.0",
+        "redux-form": "^7.4.2",
+        "redux-saga": "^0.16.0",
+        "reselect": "^3.0.1"
+    }
 }

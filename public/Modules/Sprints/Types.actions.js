@@ -1,0 +1,23 @@
+// Sprints
+export const
+    GET_SPRINTS = 'GET_SPRINTS',
+    CREATE_SPRINT = 'CREATE_SPRINT',
+    IMPORT_CSV = 'IMPORT_CSV',
+    ADD_SPRINTS = 'ADD_SPRINTS';
+
+// Addons
+export const
+    GET_ADDONS = 'GET_ADDONS',
+    CREATE_ADDON = 'CREATE_ADDON',
+    ADD_ADDON = 'ADD_ADDON';
+
+// Promotions
+export const
+    CREATE_PROMOTION = 'CREATE_PROMOTION',
+    ADD_PROMOTION = 'ADD_PROMOTION';
+
+// Service Levels
+export const
+    GET_SERVICE_LEVELS = 'GET_SERVICE_LEVELS',
+    CREATE_SERVICE_LEVEL = 'CREATE_SERVICE_LEVEL',
+    ADD_SERVICE_LEVEL = 'ADD_SERVICE_LEVEL';

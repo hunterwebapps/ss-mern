@@ -5,8 +5,8 @@ import { reduxForm, Field } from 'redux-form';
 import { Button, Row, Col } from 'react-bootstrap';
 import { NormalizePackageTypeForm } from '../../NormalizeObjects';
 
-import { ShowError } from '../../Actions/Master.actions';
-import { CreatePackageType } from '../../Actions/Packages.actions';
+import { ShowError } from '../../Modules/Master/Master.actions';
+import { CreatePackageType } from '../../Modules/Packages/Packages.actions';
 
 import { TextboxRender, CheckboxRender } from '../ReduxFormRender';
 
@@ -23,16 +23,19 @@ const validate = values => {
 
 let PackageTypeForm = ({ handleSubmit, CreatePackageType, packageTypes, ShowError }) => {
     const createPackageType = values => {
-        let packageTypeExists = false;
         packageTypes.forEach(type => {
             if (type.Description === values.Description) {
                 ShowError({ message: 'Package Type Exists', exception: `The package type '${type.Description}' already exists`});
                 return false;
             }
         });
-        CreatePackageType(
-            NormalizePackageTypeForm(values)
-        );
+        CreatePackageType({
+            Description: values.Description,
+            Price: values.Price,
+            SortOrder: values.SortOrder,
+            InternalUseOnly: values.InternalUseOnly,
+            Inactive: values.Inactive
+        });
     }
 
     return (

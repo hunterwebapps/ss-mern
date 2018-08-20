@@ -13,8 +13,16 @@ module.exports = {
     ZONES_TABLE: 'zones',
     ADDONS_TABLE: 'addons',
     SPRINTS_TABLE: 'sprints',
+    STOPS_TABLE: 'stops',
     PACKAGE_TYPES_TABLE: 'packagetypes',
+    TRACKING_LOGS_TABLE: 'trackinglogs',
+    TRACKING_LOG_TYPES_TABLE: 'trackinglogtypes',
     CLIENTS_TABLE: 'clients',
+    PAGES_TABLE: 'pages',
+    PACKAGES_TABLE: 'packages',
+    SERVICE_LEVELS_TABLE: 'servicelevels',
+    ACCOUNTS_TABLE: 'accounts',
+    PROMOTIONS_TABLE: 'promotions',
 
     // HTTP Status Codes
     OK: 200,

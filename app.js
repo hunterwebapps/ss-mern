@@ -5,7 +5,8 @@ const debug = require('debug'),
     favicon = require('serve-favicon'),
     logger = require('morgan'),
     cookieParser = require('cookie-parser'),
-    db = require('./models/db');
+    db = require('./models/db'),
+    auth = require('./middleware/authentication');
 
 const routes = require('./routes/index.routes');
 const api = require('./routes/api.routes');
@@ -22,7 +23,8 @@ app.use('/', [
     express.static(path.join(__dirname, 'public')),
     express.static(path.join(__dirname, 'models')),
     cookieParser(),
-    favicon(path.join(__dirname, 'public/favicon.ico'))
+    favicon(path.join(__dirname, 'public/favicon.ico')),
+    auth
 ]);
 
 // Catch API Calls First

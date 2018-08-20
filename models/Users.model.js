@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const {
@@ -9,35 +10,6 @@ const {
     // HTTP Status Codes
     OK, CREATED, NOT_FOUND, BAD_REQUEST
 } = require('../constants');
-
-const AuthSchema = new Schema({
-    Username: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    EmailAddress: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    EmailConfirmed: {
-        type: Boolean,
-        default: false
-    },
-    PasswordHash: {
-        type: String,
-        required: true
-    },
-    PasswordSalt: {
-        type: String,
-        required: true
-    },
-    FailedAttempts: {
-        type: Number,
-        default: 0
-    }
-});
 
 const UserSchema = new Schema({
     Username: {
@@ -50,20 +22,16 @@ const UserSchema = new Schema({
         ref: CLIENTS_TABLE,
         required: true
     },
+    EmailAddress: {
+        type: String,
+        required: true
+    },
     Contact: {
-        Title: String,
-        FirstName: String,
-        LastName: String,
-        Suffix: String,
         Nickname: String,
-        Company: String,
-        JobTitle: String,
         Address: {
             type: Schema.Types.ObjectId,
             ref: ADDRESSES_TABLE
         },
-        PhoneNumbers: Array,
-        EmailAddresses: Array,
         Website: String,
         BirthDate: Date,
         Avatar: String
@@ -107,14 +75,19 @@ const UserSchema = new Schema({
                 Expiration: Date
             },
             PayRate: {
-                PerSprint: Number,
-                PerHour: Number,
-                PerDay: Number
+                PerSprint: Schema.Types.Decimal128,
+                PerHour: Schema.Types.Decimal128,
+                PerDay: Schema.Types.Decimal128
             },
+            WeekdayRates: [{
+                Weekday: String,
+                Percent: Schema.Types.Decimal128,
+                PerSprint: Schema.Types.Decimal128,
+                PerDay: Schema.Types.Decimal128
+            }],
             Vehicle: {
                 type: Schema.Types.ObjectId,
-                ref: VEHICLES_TABLE,
-                unique: true
+                ref: VEHICLES_TABLE
             }
         },
         required: false
@@ -127,11 +100,16 @@ const UserSchema = new Schema({
             },
             DefaultPackageType: {
                 type: Schema.Types.ObjectId,
-                ref: PACKAGE_TYPES_TABLE
+                ref: PACKAGE_TYPES_TABLE,
+                required: true
             },
             ImportConversion: String,
             LabelTemplate: String,
             LateDelivery: String,
+            UserAddresses: [{
+                type: Schema.Types.ObjectId,
+                ref: ADDRESSES_TABLE
+            }],
             Sprints: [{
                 type: Schema.Types.ObjectId,
                 ref: SPRINTS_TABLE
@@ -145,27 +123,25 @@ const UserSchema = new Schema({
     }
 });
 
-const AuthModel = mongoose.model(AUTHENTICATION_TABLE, AuthSchema);
-
 const UserModel = mongoose.model(USERS_TABLE, UserSchema);
 
-const UsernameExists = async username => await AuthModel.findOne({ Username: username }) !== null;
+const CreateUser = async (userData, client) => {
+    const user = await UserModel.create({
+        Username: userData.Username,
+        Client: client,
+        EmailAddress: userData.EmailAddress,
+        Contact: userData.Contact,
+        Administrator: userData.Administrator,
+        Superuser: userData.Superuser,
+        FullClientAccess: userData.FullClientAccess,
+        Driver: userData.Driver,
+        Customer: userData.Customer
+    });
 
-const EmailExists = async email => await AuthModel.findOne({ EmailAddress: email }) !== null;
-
-const HashPassword = async password => {
-    const salt = await bcrypt.genSalt(12);
-    const hash = await bcrypt.hash(password, salt);
-    return {
-        salt,
-        hash
-    };
+    return user;
 }
 
 module.exports = {
-    AuthModel,
     UserModel,
-    UsernameExists,
-    EmailExists,
-    HashPassword
-}
+    CreateUser
+};

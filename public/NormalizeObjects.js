@@ -1,4 +1,4 @@
-﻿import { NormalizeAddress } from "./Sagas/Addresses.saga";
+﻿import { NormalizeAddress } from "./Modules/Addresses/Addresses.saga";
 
 export const NormalizeRelativeUrlField = value => {
     if (value && value[0] != '/') {
@@ -8,6 +8,10 @@ export const NormalizeRelativeUrlField = value => {
 }
 
 export const NormalizeCodeField = value => value && value.toUpperCase().replace(' ', '_');
+
+export const NormalizeDecimalField = precision => (value, previous) => /^[0-9]+.?[0-9]?$/.test(value) ? value : previous;
+
+export const NormalizeIntField = value => value && (parseInt(value) || parseInt(0));
 
 export const NormalizePhoneNumbers = numberData =>
     numberData.PhoneNumbers

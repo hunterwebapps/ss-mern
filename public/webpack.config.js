@@ -3,19 +3,18 @@
  * Create Scripts Subfolder "React"
  * npm init ~/Scripts/React/
  * npm i --save react react-dom react-router-dom prop-types axios redux react-redux redux-saga react-bootstrap react-transition-group lodash reselect redux-form react-router-redux
- * npm i --save-dev babel-core babel-loader webpack webpack-cli babel-preset-env babel-preset-react babel-plugin-transform-class-properties babel-plugin-transform-object-rest-spread babel-polyfill webpack-node-externals
+ * npm i --save-dev babel-core babel-loader webpack webpack-cli babel-preset-env babel-preset-react babel-plugin-transform-class-properties babel-plugin-transform-object-rest-spread babel-polyfill webpack-bundle-analyzer babel-plugin-syntax-dynamic-import
  * Add to package.json "scripts"=>"dev": "webpack --config webpack.config.js --mode development -w", "build": "webpack --config webpack.config.js --mode production"
  * Create react.js Entry Point
 */
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+
 module.exports = {
     context: __dirname,
-    entry: {
-        user: ['babel-polyfill', './React_User.js'],
-        manager: ['babel-polyfill', './React_Manager.js']
-        },
+    entry: ['babel-polyfill', './React.js'],
     output: {
         path: __dirname,
-        filename: 'Bundle.[name].js'
+        filename: 'Bundle.js'
     },
     module: {
         rules: [
@@ -31,13 +30,17 @@ module.exports = {
                         ],
                         plugins: [
                             "transform-class-properties",
-                            "transform-object-rest-spread"
+                            "transform-object-rest-spread",
+                            "syntax-dynamic-import"
                         ]
                     }
                 }
             }
         ]
-    }
+    },
+    plugins: [
+        //new BundleAnalyzerPlugin()
+    ]
 };
 
 /*

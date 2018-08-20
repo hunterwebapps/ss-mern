@@ -5,7 +5,7 @@ import { reduxForm, Field } from 'redux-form';
 import { Button, Row, Col } from 'react-bootstrap';
 import { NormalizeUserTypeForm } from '../../NormalizeObjects';
 
-import { CreateUserType } from '../../Actions/Users.actions';
+import { CreateUserType } from '../../Modules/Users/Users.actions';
 
 import { TextboxRender, SelectRender, CheckboxRender } from '../ReduxFormRender';
 

@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Modal from 'react-bootstrap/lib/Modal';
 import Button from 'react-bootstrap/lib/Button';
 
-import { ShowError } from '../Actions/Master.actions';
+import { ShowError } from '../Modules/Master/Master.actions';
 
 const ErrorModal = ({ error, ShowError }) =>
     <Modal show={error !== null}>

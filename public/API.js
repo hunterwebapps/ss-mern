@@ -4,49 +4,20 @@ const host = 'http://localhost:3000/api';
 
 const API = {
     User: {
-        Initialize: async () => {
-            const token = localStorage.getItem('auth-token') || sessionStorage.getItem('auth-token');
-            if (token !== null && username !== null) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                return await axios.get(`${host}/Users/Me`);
-            }
-        },
+        Initialize: async () =>
+            await axios.get(`${host}/Users/Me`)
+                .catch(err => getError(err)),
         Get: async (userId = '') =>
             await axios.get(`${host}/Users/${userId}`)
                 .catch(err => getError(err)),
-        Login: async loginInfo => {
-            var params = new URLSearchParams();
-            params.append('grant_type', 'password');
-            params.append('username', loginInfo.Username);
-            params.append('password', loginInfo.Password);
-
-            const res = await axios.post('/Token', params, {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-            }).catch(err => getError(err));
-
-            const token = res.data.access_token;
-            const username = res.data.userName;
-            console.log('Login', `Token ${token}`, `Username ${username}`);
-            if (token) {
-                const storage = loginInfo.RememberMe ? localStorage : sessionStorage;
-                storage.setItem('auth-token', token);
-                storage.setItem('username', username);
-                console.log('Login Storage', storage);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-                console.log('Axios Common Headers', axios.defaults.headers.common);
-                return await axios.get(`${host}/Users/${username}`).catch(err => getError(err));
-            }
-        },
+        Login: async loginInfo =>
+            await axios.post(`${host}/Users/Login`, loginInfo)
+                .catch(err => getError(err)),
         Register: async registerInfo =>
             await axios.post(host + '/Users/Register', registerInfo)
                 .catch(err => getError(err)),
-        Logout: () => {
-            localStorage.removeItem('auth-token');
-            sessionStorage.removeItem('auth-token');
-            axios.defaults.headers.common['Authorization'] = '';
-            axios.get(`${host}/Account/Logout`)
-        },
+        Logout: async () => await axios.get(`${host}/Users/Logout`)
+            .catch(err => getError(err)),
         Forgot: async (forgotInfo) => {
             const { username, email } = forgotInfo;
             const res = await axios.post(`${host}/Account/Forgot`, {
@@ -56,11 +27,40 @@ const API = {
             return res.data;
         },
         Create: async createInfo =>
-            await axios.post(`${host}/Users/Create`, createInfo)
+            await axios.post(`${host}/Users`, createInfo)
                 .catch(err => getError(err)),
-        GetContactInfo: async (contactId = '') =>
-            await axios.get(`${host}/Users/ContactInfo/${contactId}`)
-                .catch(err => getError(err))
+        Update: async updateInfo =>
+            await axios.put(`${host}/Users`, updateInfo)
+                .catch(err => getError(err)),
+        Account: {
+            Get: async (accountId = '') =>
+                axios.get(`${host}/Accounts/${accountId}`)
+                    .catch(err => getError(err)),
+            Create: async accountInfo =>
+                axios.post(`${host}/Accounts`, accountInfo)
+                    .catch(err => getError(err))
+        }
+    },
+    Sprint: {
+        Import: async formData =>
+            await axios.post(`${host}/Sprints/Import`, formData)
+                .catch(err => getError(err)),
+        Addon: {
+            Get: async (addonId = '') =>
+                await axios.get(`${host}/Addons/${addonId}`)
+                    .catch(err => getError(err)),
+            Create: async addonInfo =>
+                await axios.post(`${host}/Addons`, addonInfo)
+                    .catch(err => getError(err))
+        },
+        ServiceLevel: {
+            Get: async (serviceLevelId = '') =>
+                await axios.get(`${host}/ServiceLevels/${serviceLevelId}`)
+                    .catch(err => getError(err)),
+            Create: async serviceLevelInfo =>
+                await axios.post(`${host}/ServiceLevels`, serviceLevelInfo)
+                    .catch(err => getError(err))
+        }
     },
     OperatingLocation: {
         Get: async (locationId = '') =>
@@ -70,13 +70,23 @@ const API = {
             await axios.post(`${host}/OperatingLocations`, operatingLocationInfo)
                 .catch(err => getError(err))
     },
-    PackageType: {
-        Get: async (typeId = '') =>
-            await axios.get(`${host}/Packages/Types/${typeId}`)
-                .catch(err => getError(err)),
-        Create: async packageTypeInfo =>
-            await axios.post(`${host}/Packages/Types`, packageTypeInfo)
-                .catch(err => getError(err))
+    Package: {
+        Type: {
+            Get: async (typeId = '') =>
+                await axios.get(`${host}/PackageTypes/${typeId}`)
+                    .catch(err => getError(err)),
+            Create: async packageTypeInfo =>
+                await axios.post(`${host}/PackageTypes`, packageTypeInfo)
+                    .catch(err => getError(err))
+        },
+        TrackingLogType: {
+            Get: async (typeId = '') =>
+                await axios.get(`${host}/TrackingLogs/Types/${typeId}`)
+                    .catch(err => getError(err)),
+            Create: async trackingLogTypeInfo =>
+                await axios.post(`${host}/TrackingLogs/Types`, trackingLogTypeInfo)
+                    .catch(err => getError(err))
+        }
     },
     Address: {
         Get: async (addressId = '') =>
@@ -87,7 +97,15 @@ const API = {
                 .catch(err => getError(err)),
         GetTimezones: async () =>
             await axios.get(`${host}/Addresses/Timezones`)
-                .catch(err => getError(err))
+                .catch(err => getError(err)),
+        UserAddress: {
+            Get: async (addressId = '') =>
+                await axios.get(`${host}/Addresses/UserAddresses/${addressId}`)
+                    .catch(err => getError(err)),
+            Create: async userAddressInfo =>
+                await axios.post(`${host}/Addresses/UserAddresses`, userAddressInfo)
+                    .catch(err => getError(err))
+        }
     },
     Client: {
         Get: async (clientId = '') =>
@@ -110,19 +128,14 @@ const API = {
         Delete: async pageId =>
             await axios.delete(`${host}/Pages/${pageId}`)
                 .catch(err => getError(err))
-    },
-    Addon: {
-        Create: async addonInfo =>
-            await axios.post(`${host}/Sprints/CreateAddon`, addonInfo)
-                .catch(err => getError(err))
     }
 }
 
 const getError = err => {
     const { response } = err;
-    console.log('API getError', response);
+    console.log('API getError', response, err);
     const data = {
-        status: response.status
+        status: response && response.status
     };
 
     if (response.data.ExceptionMessage) {

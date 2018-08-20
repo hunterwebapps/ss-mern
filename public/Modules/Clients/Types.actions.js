@@ -1,0 +1,4 @@
+export const
+    GET_CLIENTS = 'GET_CLIENTS',
+    CREATE_CLIENT = 'CREATE_CLIENT',
+    ADD_CLIENT = 'ADD_CLIENT';

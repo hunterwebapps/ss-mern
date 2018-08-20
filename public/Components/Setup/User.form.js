@@ -5,9 +5,9 @@ import { reduxForm, Field, FieldArray } from 'redux-form';
 import { Button, Form, FormControl, FormGroup, ControlLabel, HelpBlock, Row, Col, Checkbox, Tab, Nav, NavItem } from 'react-bootstrap';
 import { NormalizeUserForm, NormalizeDriverForm, NormalizeCustomerForm } from '../../NormalizeObjects';
 
-import { CreateUser } from '../../Actions/Users.actions';
+import { CreateUser, UpdateUser } from '../../Modules/Users/Users.actions';
 
-import { TextboxRender, SelectRender, InputListRender, CheckboxRender, TextareaRender, DateTimeRender } from '../ReduxFormRender';
+import { TextboxRender, SelectRender, InputListRender, CheckboxRender, TextareaRender, DateTimeRender, AddressRender } from '../ReduxFormRender';
 
 const validate = values => {
     const errors = {};
@@ -39,199 +39,427 @@ const validate = values => {
     return errors;
 }
 
-let UserForm = ({ handleSubmit, CreateUser, submitting, users, operatingLocations, countries }) => {
-    const createUser = values => {
-        let userExists = false;
-        users.forEach(user => {
-            if (user.Username === values.Username) {
-                return false;
+class UserForm extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            editInitialized: false,
+            editUser: null
+        }
+    }
+    
+    componentWillUpdate() {
+        if (this.props.id && !this.state.editInitialized) {
+            const editUser = this.props.users.find(user => user._id === this.props.id);
+            const initializeUser = {
+                ...editUser,
+                ...(editUser && editUser.Contact),
+                ...(editUser && editUser.Contact && editUser.Contact.Address),
+                ...(editUser && editUser.Driver),
+                ...(editUser && editUser.Customer)
             }
-        });
-        const userData = NormalizeUserForm(values);
-        const driverData = values.DefaultPackageType && NormalizeDriverForm(values);
-        const customerData = values.OperatingLocation && NormalizeCustomerForm(values);
-
-        CreateUser({
-            User: userData,
-            Driver: driverData,
-            Customer: customerData,
-            Password: values.Password
-        });
+            if (editUser) {
+                this.props.initialize(initializeUser);
+            }
+            this.setState({ editInitialized: true, editUser });
+        }
     }
 
-    console.log("User Form Render");
+    createUser = values => {
+        if (!this.props.id) {
+            let userExists = false;
+            this.props.users.forEach(user => {
+                if (user.Username === values.Username) {
+                    return false;
+                }
+            });
+        }
 
-    return (
-        <form onSubmit={handleSubmit(createUser)}>
-            <Button type="submit" bsStyle="success" className="pull-right">Submit</Button>
-            <Button type="reset" bsStyle="default" className="pull-right">Reset</Button>
-            <Tab.Container id="userForm" defaultActiveKey="authorize">
-                <Row className="clearfix">
-                    <Col xs={12}>
-                        <Nav bsStyle="tabs">
-                            <NavItem eventKey="authorize">Authorize</NavItem>
-                            <NavItem eventKey="contact">Contact</NavItem>
-                            <NavItem eventKey="driver">Driver</NavItem>
-                            <NavItem eventKey="customer">Customer</NavItem>
-                            <NavItem eventKey="incidents">Incidents</NavItem>
-                            <NavItem eventKey="reviews">Reviews</NavItem>
-                        </Nav>
-                    </Col>
-                    <Col xs={12}>
-                        <Tab.Content className="margin-top" animation>
-                            <Tab.Pane eventKey="authorize">
-                                <Row>
-                                    <Field name="Username" label="Username" colWidths={{ sm: 4 }} component={TextboxRender} tabIndex="1" />
-                                    <Field name="UserType" label="User Type" colWidths={{ sm: 4 }} component={SelectRender} tabIndex="2">
-                                        <option value="">Select a User Type...</option>
-                                    </Field>
-                                </Row>
-                                <Row>
-                                    <Field name="Password" label="Password" colWidths={{ sm: 4 }} component={TextboxRender} type="password" tabIndex="3" />
-                                    <Field name="ConfirmPassword" label="Confirm Password" colWidths={{ sm: 4 }} component={TextboxRender} type="password" tabIndex="4" />
-                                </Row>
-                                <Row>
-                                    <Field name="Administrator" label="Administrator" colWidths={{ xs: 4, sm: 2 }} component={CheckboxRender} tabIndex="5" />
-                                    <Field name="Superuser" label="Superuser" colWidths={{ xs: 4, sm: 2 }} component={CheckboxRender} tabIndex="6" />
-                                    <Field name="FullClientAccess" label="Full Client Access" colWidths={{ xs: 4, sm: 3 }} component={CheckboxRender} tabIndex="7" />
-                                </Row>
-                                <Row>
-                                    <Field name="Locked" label="Locked" colWidths={{ xs: 4, sm: 2 }} component={CheckboxRender} tabIndex="8" />
-                                    <Field name="Inactive" label="Inactive" colWidths={{ xs: 4, sm: 2 }} component={CheckboxRender} tabIndex="9" />
-                                </Row>
-                            </Tab.Pane>
-                            <Tab.Pane eventKey="contact">
-                                <Row>
-                                    <Col sm={7}>
-                                        <Row>
-                                            <Field name="FirstName" label="First Name" colWidths={{ sm: 6 }} component={TextboxRender} tabIndex="10" />
-                                            <Field name="LastName" label="Last Name" colWidths={{ sm: 6 }} component={TextboxRender} tabIndex="11" />
-                                        </Row>
-                                        <Row>
-                                            <Field name="Address1" label="Address 1" colWidths={{ xs: 12 }} component={TextboxRender} tabIndex="12" />
-                                            <Field name="Address2" label="Address 2" colWidths={{ xs: 12 }} component={TextboxRender} tabIndex="13" />
-                                            <Field name="City" label="City" colWidths={{ sm: 5 }} component={TextboxRender} tabIndex="14" />
-                                            <Field name="State" label="State" colWidths={{ xs: 4, sm: 3 }} component={TextboxRender} tabIndex="15" />
-                                            <Field name="PostalCode" label="Postal Code" colWidths={{ xs: 8, sm: 4 }} component={TextboxRender} tabIndex="16" />
-                                            <Field name="Country" label="Country" colWidths={{ sm: 6 }} component={SelectRender} tabIndex="17">
-                                                {countries.map(country =>
-                                                    <option key={country.CountryID} value={country.CountryID}>{country.Name}</option>
-                                                )}
-                                            </Field>
-                                        </Row>
-                                    </Col>
-                                    <Col sm={5}>
-                                        <Row>
+        const userData = {
+            Username: values.Username,
+            Password: values.Password,
+            EmailAddress: values.EmailAddresses.filter(email => email.EmailAddress)[0].EmailAddress,
+            Contact: {
+                Nickname: values.Nickname,
+                Address: {
+                    FirstName: values.FirstName,
+                    LastName: values.LastName,
+                    JobTile: values.JobTitle,
+                    Company: values.Company,
+                    Address1: values.Address1,
+                    Address2: values.Address2,
+                    City: values.City,
+                    State: values.State,
+                    PostalCode: values.PostalCode,
+                    Country: values.Country,
+                    Timezone: values.Timezone,
+                    PhoneNumbers: values.PhoneNumbers.map(number => ({
+                        PhoneNumber: number.PhoneNumber,
+                        Type: number.Type
+                    })),
+                    EmailAddresses: values.EmailAddresses.map(email => email.EmailAddress)
+                },
+                Website: values.Website,
+                BirthDate: values.BirthDate,
+                Avatar: values.Avatar
+            },
+            //Groups: [
+            //    values.Administrator  
+            //]
+            Administrator: values.Administrator,
+            Superuser: values.Superuser,
+            FullClientAccess: values.FullClientAccess
+        };
 
-                                            <Field name="Company" label="Company" colWidths={{ xs: 12 }} component={TextboxRender} tabIndex="11" />
-                                            <FieldArray
-                                                name="PhoneNumbers"
-                                                headers={[
-                                                    { name: 'PhoneNumber', label: 'Phone Number', component: TextboxRender },
-                                                    { name: 'Type', label: 'Type', component: TextboxRender }
-                                                ]}
-                                                colWidths={{ xs: 12 }}
-                                                component={InputListRender}
-                                                tabIndex="18"
-                                            />
-                                            <FieldArray
-                                                name="EmailAddresses"
-                                                headers={[{ name: 'EmailAddresses', label: 'Email Addresses', component: TextboxRender }]}
-                                                colWidths={{ xs: 12 }}
-                                                component={InputListRender}
-                                                tabIndex="19"
-                                            />
-                                        </Row>
-                                    </Col>
-                                </Row>
-                            </Tab.Pane>
-                            <Tab.Pane eventKey="driver">
-                                <Row>
-                                    <Field name="OperatingLocation" label="Operating Location" colWidths={{ sm: 6 }} component={SelectRender} tabIndex="20">
-                                        <option value="">Select a Operating Location...</option>
-                                    </Field>
-                                </Row>
-                                <Row>
-                                    <Field name="EndDate" label="End Date" colWidths={{ sm: 4 }} component={TextboxRender} tabIndex="21" />
-                                </Row>
-                                <Row>
-                                    <Field name="DriverLicenseNumber" label="Driver License Number" colWidths={{ sm: 6 }} component={TextboxRender} tabIndex="25" />
-                                </Row>
-                                <Row>
-                                    <Field name="DriverLicenseState" label="Driver License State" colWidths={{ sm: 4 }} component={SelectRender} tabIndex="26">
-                                        <option value="">Select a Driver License State...</option>
-                                    </Field>
-                                </Row>
-                                <Row>
-                                    <Field name="DriverLicenseExpiration" label="Driver License Expiration" colWidths={{ sm: 4 }} component={DateTimeRender} dateFormat="MM/DD/YYYY" timeFormat={false} tabIndex="27" />
-                                </Row>
-                                <Row>
-                                    <Field name="HourlyRate" label="Hourly Rate" colWidths={{ xs: 4, sm: 3 }} component={TextboxRender} tabIndex="28" />
-                                    <Field name="DailyRate" label="Daily Rate" colWidths={{ xs: 4, sm: 3 }} component={TextboxRender} tabIndex="29" />
-                                    <Field name="SprintRate" label="Sprint Rate" colWidths={{ xs: 4, sm: 3 }} component={TextboxRender} tabIndex="30" />
-                                </Row>
-                                <Row>
-                                    <FieldArray
-                                        name="WeekdayRates"
-                                        headers={[
-                                            { name: 'Weekday', label: 'Weekday', component: SelectRender },
-                                            { name: 'PercentIncrease', label: 'Percent Increase', component: TextboxRender },
-                                            { name: 'DailyRate', label: 'Daily Rate', component: TextboxRender },
-                                            { name: 'SprintRate', label: 'Sprint Rate', component: TextboxRender }
-                                        ]}
-                                        colWidths={{ sm: 9 }}
-                                        component={InputListRender}
-                                        tabIndex="31"
-                                    />
-                                </Row>
-                                <Row>
-                                    <Field name="MaxWeight" label="Max Weight" colWidths={{ sm: 3 }} component={TextboxRender} tabIndex="31" />
-                                </Row>
-                                <Row>
-                                    <Field name="OwnVehicle" label="Own Vehicle" colWidths={{ sm: 3 }} component={CheckboxRender} tabIndex="32" />
-                                </Row>
-                                <Row>
-                                    <Field name="DefaultVehicle" label="Default Vehicle" colWidths={{ sm: 4 }} component={SelectRender} tabIndex="32">
-                                        <option value="">Select a Default Vehicle...</option>
+        if (values.OperatingLocation) {
+            userData.Driver = {
+                OperatingLocation: values.OperatingLocation,
+                StartDate: values.StartDate,
+                EndDate: values.EndDate,
+                MaxWeight: values.MaxWeight,
+                DriverLicense: {
+                    Number: values.DriverLicenseNumber,
+                    State: values.DriverLicenseState,
+                    Expiration: values.DriverLicenseExpiration
+                },
+                PayRate: {
+                    PerSprint: values.SprintRate,
+                    PerHour: values.HourlyRate,
+                    PerDay: values.DailyRate
+                },
+                WeekdayRates: values.WeekdayRates.map(day => ({
+                    Weekday: day.Weekday,
+                    Percent: day.PercentIncrease,
+                    PerSprint: day.SprintRate,
+                    PerDay: day.DailyRate
+                })),
+                Vehicle: values.DefaultVehicle
+            }
+        }
 
-                                    </Field>
-                                </Row>
-                                <Row>
-                                    <label>Image</label>
-                                    <input type="file" />
-                                </Row>
-                            </Tab.Pane>
-                            <Tab.Pane eventKey="customer">
-                                <Row>
-                                    <Field name="DefaultAddon" label="Default Addon" colWidths={{ sm: 4 }} component={SelectRender} tabIndex="32">
-                                        <option value="">Select a Default Addon...</option>
-                                    </Field>
-                                    <Field name="DefaultPackageType" label="Default Package Type" colWidths={{ sm: 4 }} component={SelectRender} tabIndex="33">
-                                        <option value="">Select a Default Package Type...</option>
-                                    </Field>
-                                </Row>
-                                <Row>
-                                    <Field name="ImportConversion" label="Import Conversion" colWidths={{ sm: 8 }} component={TextareaRender} tabIndex="34" />
-                                </Row>
-                                <Row>
-                                    <Field name="LabelTemplate" label="Label Template" colWidths={{ sm: 8 }} component={TextboxRender} tabIndex="35" />
-                                </Row>
-                                <Row>
-                                    <Field name="LateDelivery" label="SLA Late Delivery" colWidths={{ sm: 4 }} component={DateTimeRender} dateFormat={false} timeFormat="hh:mm A" defaultValue="1970/01/01 20:00:00" tabIndex="36" />
-                                </Row>
-                            </Tab.Pane>
-                            <Tab.Pane eventKey="incidents">
-                            // TODO: Add Incidents Form
-                            </Tab.Pane>
-                            <Tab.Pane eventKey="reviews">
-                            // TODO: Add Reviews Form
-                            </Tab.Pane>
-                        </Tab.Content>
-                    </Col>
-                </Row>
-            </Tab.Container>
-        </form>
-    );
+        if (values.DefaultPackageType) {
+            userData.Customer = {
+                DefaultAddon: values.DefaultAddon,
+                DefaultPackageType: values.DefaultPackageType,
+                ImportConversion: values.ImportConversion,
+                LabelTemplate: values.LabelTemplate
+            }
+        }
+
+        if (this.state.editInitialized) {
+            this.props.UpdateUser(Object.assign(userData, this.state.editUser));
+        } else {
+            this.props.CreateUser(userData);
+        }
+    }
+
+    render() {
+        return (
+            <form onSubmit={this.props.handleSubmit(this.createUser)}>
+                <Button type="submit" bsStyle="success" className="pull-right">Submit</Button>
+                <Button type="reset" bsStyle="default" className="pull-right">Reset</Button>
+                <Tab.Container id="userForm" defaultActiveKey="user">
+                    <Row className="clearfix">
+                        <Col xs={12}>
+                            <Nav bsStyle="tabs">
+                                <NavItem eventKey="user">User</NavItem>
+                                <NavItem eventKey="driver">Driver</NavItem>
+                                <NavItem eventKey="customer">Customer</NavItem>
+                                <NavItem eventKey="incidents">Incidents</NavItem>
+                                <NavItem eventKey="reviews">Reviews</NavItem>
+                            </Nav>
+                        </Col>
+                        <Col xs={12}>
+                            <Tab.Content className="margin-top" animation>
+                                <Tab.Pane eventKey="user">
+                                    <Row>
+                                        <Field
+                                            name="Username"
+                                            label="Username"
+                                            colWidths={{ sm: 4 }}
+                                            component={TextboxRender}
+                                            autoFocus
+                                        />
+                                        <Field
+                                            name="Password"
+                                            label="Password"
+                                            colWidths={{ sm: 4 }}
+                                            component={TextboxRender}
+                                            type="password"
+                                        />
+                                        <Field
+                                            name="ConfirmPassword"
+                                            label="Confirm Password"
+                                            colWidths={{ sm: 4 }}
+                                            component={TextboxRender}
+                                            type="password"
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="Administrator"
+                                            label="Administrator"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={CheckboxRender}
+                                        />
+                                        <Field
+                                            name="Superuser"
+                                            label="Superuser"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={CheckboxRender}
+                                        />
+                                        <Field
+                                            name="FullClientAccess"
+                                            label="Full Client Access"
+                                            colWidths={{ xs: 4, sm: 3 }}
+                                            component={CheckboxRender}
+                                        />
+                                        <Field
+                                            name="Locked"
+                                            label="Locked"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={CheckboxRender}
+                                        />
+                                        <Field
+                                            name="Inactive"
+                                            label="Inactive"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={CheckboxRender}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="Nickname"
+                                            label="Nickname"
+                                            colWidths={{ sm: 3 }}
+                                            component={TextboxRender}
+                                        />
+                                        <Field
+                                            name="BirthDate"
+                                            label="Birth Date"
+                                            colWidths={{ sm: 3 }}
+                                            component={DateTimeRender}
+                                            timeFormat={false}
+                                            dateFormat="MM/DD/YYYY"
+                                        />
+                                        <Col sm={10}>
+                                            <AddressRender countries={this.props.countries} timezones={this.props.timezones} />
+                                        </Col>
+                                        <Field
+                                            name="Website"
+                                            label="Website"
+                                            colWidths={{ sm: 6 }}
+                                            component={TextboxRender}
+                                        />
+                                    </Row>
+                                </Tab.Pane>
+                                <Tab.Pane eventKey="driver">
+                                    <Row>
+                                        <Field
+                                            name="OperatingLocation"
+                                            label="Operating Location"
+                                            colWidths={{ sm: 6 }}
+                                            component={SelectRender}
+                                        >
+                                            <option value="">Select an Operating Location...</option>
+                                            {this.props.operatingLocations.map(location =>
+                                                <option key={location._id} value={location._id}>
+                                                    {`${location.Code} - ${location.Contact.Address.City}`}
+                                                </option>
+                                            )}
+                                        </Field>
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="EndDate"
+                                            label="End Date"
+                                            colWidths={{ sm: 4 }}
+                                            component={TextboxRender}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="DriverLicenseNumber"
+                                            label="Driver License Number"
+                                            colWidths={{ sm: 6 }}
+                                            component={TextboxRender}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="DriverLicenseState"
+                                            label="Driver License State"
+                                            colWidths={{ sm: 4 }}
+                                            component={SelectRender}
+                                        >
+                                            <option value="">Select a Driver License State...</option>
+                                        </Field>
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="DriverLicenseExpiration"
+                                            label="Driver License Expiration"
+                                            colWidths={{ sm: 4 }}
+                                            component={DateTimeRender}
+                                            dateFormat="MM/DD/YYYY"
+                                            timeFormat={false}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="HourlyRate"
+                                            label="Hourly Rate"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={TextboxRender}
+                                        />
+                                        <Field
+                                            name="DailyRate"
+                                            label="Daily Rate"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={TextboxRender}
+                                        />
+                                        <Field
+                                            name="SprintRate"
+                                            label="Sprint Rate"
+                                            colWidths={{ xs: 4, sm: 2 }}
+                                            component={TextboxRender}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <FieldArray
+                                            name="WeekdayRates"
+                                            headers={[
+                                                {
+                                                    name: 'Weekday',
+                                                    label: 'Weekday',
+                                                    component: SelectRender,
+                                                    options: [
+                                                        '',
+                                                        'Monday',
+                                                        'Tuesday',
+                                                        'Wednesday',
+                                                        'Thursday',
+                                                        'Friday',
+                                                        'Saturday',
+                                                        'Sunday'
+                                                    ].map(day => <option key={day} value={day}>{day}</option>)
+                                                },
+                                                {
+                                                    name: 'PercentIncrease',
+                                                    label: 'Percent Increase',
+                                                    component: TextboxRender
+                                                },
+                                                {
+                                                    name: 'DailyRate',
+                                                    label: 'Daily Rate',
+                                                    component: TextboxRender
+                                                },
+                                                {
+                                                    name: 'SprintRate',
+                                                    label: 'Sprint Rate',
+                                                    component: TextboxRender
+                                                }
+                                            ]}
+                                            colWidths={{ sm: 9 }}
+                                            component={InputListRender}
+                                            tabIndex="31"
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="MaxWeight"
+                                            label="Max Weight"
+                                            colWidths={{ sm: 3 }}
+                                            component={TextboxRender}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="DefaultVehicle"
+                                            label="Default Vehicle"
+                                            colWidths={{ sm: 4 }}
+                                            component={SelectRender}
+                                        >
+                                            <option value="">Select a Default Vehicle...</option>
+                                        </Field>
+                                    </Row>
+                                    <Row>
+                                        <label>Image</label>
+                                        <input type="file" />
+                                    </Row>
+                                </Tab.Pane>
+                                <Tab.Pane eventKey="customer">
+                                    <Row>
+                                        <Field
+                                            name="DefaultAddon"
+                                            label="Default Addon"
+                                            colWidths={{ sm: 4 }}
+                                            component={SelectRender}
+                                        >
+                                            <option value="">Select a Default Addon...</option>
+                                            {this.props.addons.map(addon =>
+                                                <option key={addon._id} value={addon._id}>
+                                                    {addon.Description}
+                                                </option>
+                                            )}
+                                        </Field>
+                                        <Field
+                                            name="DefaultPackageType"
+                                            label="Default Package Type"
+                                            colWidths={{ sm: 4 }}
+                                            component={SelectRender}
+                                        >
+                                            <option value="">Select a Default Package Type...</option>
+                                            {this.props.packageTypes.map(type =>
+                                                <option key={type._id} value={type._id}>
+                                                    {type.Description}
+                                                </option>
+                                            )}
+                                        </Field>
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="ImportConversion"
+                                            label="Import Conversion"
+                                            colWidths={{ sm: 8 }}
+                                            component={TextareaRender}
+                                            placeholder="csv_row_header = database_field_name"
+                                            rows="5"
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="LabelTemplate"
+                                            label="Label Template"
+                                            colWidths={{ sm: 8 }}
+                                            component={TextboxRender}
+                                        />
+                                    </Row>
+                                    <Row>
+                                        <Field
+                                            name="LateDelivery"
+                                            label="SLA Late Delivery"
+                                            colWidths={{ sm: 4 }}
+                                            component={DateTimeRender}
+                                            dateFormat={false}
+                                            timeFormat="hh:mm A"
+                                            defaultValue="1970/01/01 20:00:00"
+                                        />
+                                    </Row>
+                                </Tab.Pane>
+                                <Tab.Pane eventKey="incidents">
+                                // TODO: Add Incidents Form
+                                </Tab.Pane>
+                                <Tab.Pane eventKey="reviews">
+                                // TODO: Add Reviews Form
+                                </Tab.Pane>
+                            </Tab.Content>
+                        </Col>
+                    </Row>
+                </Tab.Container>
+            </form>
+        );
+    }
 }
 
 UserForm = reduxForm({
@@ -245,14 +473,18 @@ UserForm.propTypes = {
 
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state, props) => ({
     users: state.users.all,
     operatingLocations: state.operatingLocations.all,
-    countries: state.addresses.countries
+    countries: state.addresses.countries,
+    timezones: state.addresses.timezones,
+    addons: state.sprints.addons,
+    packageTypes: state.packages.types
 });
 
 const mapDispatchToProps = {
-    CreateUser
+    CreateUser,
+    UpdateUser
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(UserForm);

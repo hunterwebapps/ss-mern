@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { reduxForm, Field } from 'redux-form';
 import { Button } from 'react-bootstrap';
-import { getUsernames, getUserEmails } from '../Reducers/Main.reducer';
+import { getUsernames, getUserEmails } from '../Main.reducer';
 
-import { Register } from '../Actions/Users.actions';
+import { Register } from '../Modules/Users/Users.actions';
 
 import { TextboxRender } from './ReduxFormRender';
 import { ValidateEmail } from '../Helpers';

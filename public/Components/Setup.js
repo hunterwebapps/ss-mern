@@ -1,158 +1,220 @@
 ﻿import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Tab, Grid, Row, Col, Nav, NavItem, NavDropdown, MenuItem, Well } from 'react-bootstrap';
-import { Route } from 'react-router-dom';
-import { getOperatingLocations, getPackageTypes, getClients, getPagesWithCreator, getAddons, getUserTypes } from '../Reducers/Main.reducer';
-import { ParseSerializedDate } from '../Helpers';
+import { Link } from 'react-router-dom';
+import { Button, Tab, Grid, Row, Col, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
+import { getOperatingLocations, getPackageTypes, getClients, getPagesWithCreator, getAddons, getUserTypes, getUsersWithAddress } from '../Main.reducer';
 
-import { GetCountries } from '../Actions/Addresses.actions';
-
-import SetupViews from './Setup/SetupViews';
 import OperatingLocationForm from './Setup/OperatingLocation.form';
+import OperatingLocationView from './Setup/OperatingLocation.view';
+
 import PackageTypeForm from './Setup/PackageType.form';
+import PackageTypeView from './Setup/PackageType.view';
+
 import ClientForm from './Setup/Client.form';
+import ClientView from './Setup/Client.view';
+
 import UserForm from './Setup/User.form';
+import UserView from './Setup/User.view';
+
 import UserTypeForm from './Setup/UserType.form';
+import UserTypeView from './Setup/UserType.view';
+
 import PageForm from './Setup/Page.form';
-import AddonForm from './Setup/Addons.form';
+import PageView from './Setup/Page.view';
 
-const IsInactive = ({ yes }) => <i className={'fa ' + (yes ? 'fa-times text-danger' : 'fa-check text-success')}></i>
+import AddonForm from './Setup/Addon.form';
+import AddonView from './Setup/Addon.view';
 
-const Setup = ({ match, operatingLocations, packageTypes, clients, pages, addons, userTypes }) =>
-    <Grid>
-        <h2>Setup Manager</h2>
-        <Tab.Container id="manageSetup" defaultActiveKey="packageTypes">
-            <Row className="clearfix">
-                <Col xs={3}>
-                    <Nav bsStyle="pills" stacked>
-                        <NavItem eventKey="operatingLocations">Operating Locations</NavItem>
-                        <NavItem eventKey="packageTypes">Package Types</NavItem>
-                        <NavDropdown title="Users">
-                            <MenuItem eventKey="users">Users</MenuItem>
-                            <MenuItem eventKey="userTypes">User Types</MenuItem>
-                        </NavDropdown>
-                        <NavDropdown title="Sprints">
-                            <MenuItem eventKey="promotions">Promotions</MenuItem>
-                            <MenuItem eventKey="addons">Addons</MenuItem>
-                            <MenuItem eventKey="sprintTags">Tags</MenuItem>
-                        </NavDropdown>
-                        <NavItem eventKey="clients">Clients</NavItem>
-                        <NavItem eventKey="pages">Pages</NavItem>
-                    </Nav>
-                </Col>
-                <Col xs={9}>
-                    <Tab.Content animation>
-                        <Tab.Pane eventKey="operatingLocations">
-                            <SetupViews name="Operating Location" createComponent={OperatingLocationForm}>
-                                <tr><th width="1%">ID</th><th>Code</th><th>City</th><th width="1%"></th></tr>
-                                {operatingLocations.map(location =>
-                                    <tr key={location.OperatingLocationID}>
-                                        <td>{location.OperatingLocationID}</td>
-                                        <td>{location.Code}</td>
-                                        <td>{location.ContactInfo.Address.City}</td>
-                                        <td>
-                                            <IsInactive yes={location.Inactive} />
-                                        </td>
-                                    </tr>
-                                )}
-                            </SetupViews>
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="packageTypes">
-                            <SetupViews name="Package Type" createComponent={PackageTypeForm}>
-                                <tr><th width="1%">ID</th><th>Description</th><th>Price</th><th width="1%"></th></tr>
-                                {packageTypes.map(type =>
-                                    <tr key={type.PackageTypeID}>
-                                        <td>{type.PackageTypeID}</td>
-                                        <td>{type.Description}</td>
-                                        <td>{type.Price}</td>
-                                        <td>
-                                            <IsInactive yes={type.Inactive} />
-                                        </td>
-                                    </tr>
-                                )}
-                            </SetupViews>
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="users">
-                            <SetupViews name="User" createComponent={UserForm}>
-                                <tr><th width="1%">ID</th><th>Username</th><th>Full Name</th><th>Created</th><th>Location</th><th width="1%">Inactive</th></tr>
-                            </SetupViews>
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="userTypes">
-                            <SetupViews name="User Type" createComponent={UserTypeForm}>
-                                <tr><th width="1%">ID</th><th>Description</th><th>Home page</th><th width="1%"></th></tr>
-                                {userTypes.map(type =>
-                                    <tr key={type.UserTypeID}>
-                                        <td>{type.UserTypeID}</td>
-                                        <td>{type.Description}</td>
-                                        <td>{type.HomePage.Description}</td>
-                                        <td>
-                                            <IsInactive yes={type.Inactive} />
-                                        </td>
-                                    </tr>
-                                )}
-                            </SetupViews>
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="promotions">
+import ServiceLevelForm from './Setup/ServiceLevel.form';
+import ServiceLevelView from './Setup/ServiceLevel.view';
 
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="addons">
-                            <SetupViews name="Addon" createComponent={AddonForm}>
-                                <tr><th width="1%">ID</th><th>Code</th><th>Description</th><th>Charge</th><th width="1%"></th></tr>
-                                {addons.map(addon =>
-                                    <tr key={addon.AddonID}>
-                                        <td>{addon.AddonID}</td>
-                                        <td>{addon.Code}</td>
-                                        <td>{addon.Description}</td>
-                                        <td>{addon.AdditionalCharge}</td>
-                                        <td>
-                                            <IsInactive yes={addon.Inactive} />
-                                        </td>
-                                    </tr>
-                                )}
-                            </SetupViews>
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="sprintTags">
+import TrackingLogTypesForm from './Setup/TrackingLogTypes.form';
+import TrackingLogTypesView from './Setup/TrackingLogTypes.view';
 
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="clients">
-                            <SetupViews name="Client" createComponent={ClientForm}>
-                                <tr><th width="1%">ID</th><th>Code</th><th>Created</th><th width="1%"></th></tr>
-                                {clients.map(client =>
-                                    <tr key={client.ClientID}>
-                                        <td>{client.ClientID}</td>
-                                        <td>{client.Code}</td>
-                                        <td>{client.TimeCreated}</td>
-                                        <td>
-                                            <IsInactive yes={client.Inactive} />
-                                        </td>
-                                    </tr>
-                                )}
-                            </SetupViews>
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="pages">
-                            <SetupViews name="Page" createComponent={PageForm}>
-                                <tr><th width="1%">ID</th><th>Code</th><th>Description</th><th>Link</th><th>Creator</th><th>Created</th><th width="1%"></th></tr>
-                                {pages.map(page =>
-                                    <tr key={page.PageID}>
-                                        <td>{page.PageID}</td>
-                                        <td>{page.Code}</td>
-                                        <td>{page.Description}</td>
-                                        <td>{page.Link}</td>
-                                        <td>{page.Creator.Username}</td>
-                                        <td>{page.DateCreated}</td>
-                                        <td>
-                                            <IsInactive yes={page.Inactive} />
-                                        </td>
-                                    </tr>
-                                )}
-                            </SetupViews>
-                        </Tab.Pane>
-                    </Tab.Content>
-                </Col>
-            </Row>
-        </Tab.Container>
-    </Grid>;
+const Setup = ({
+    match,
+    history,
+    operatingLocations,
+    packageTypes,
+    clients,
+    pages,
+    addons,
+    users,
+    userTypes,
+    serviceLevels,
+    trackingLogTypes
+}) => {
+    const changeTab = key => {
+        history.push(`/ControlTower/Setup/${key}`);
+    }
+    const showForm = id => e => {
+        const url = match.url.trimEnd('/');
+        id ?
+            history.push(`${url}/Edit/${id}`)
+            :
+            history.push(`${url}/Create`);
+    }
+    const activeKey = match.params.item || 'OperatingLocations';
+    return (
+        <Grid>
+            <h2>Setup Manager</h2>
+            <Tab.Container
+                id="manageSetup"
+                activeKey={activeKey}
+                onSelect={changeTab}
+            >
+                <Row className="clearfix">
+                    <Col xs={3}>
+                        <Nav bsStyle="pills" stacked>
+                            <NavItem eventKey="OperatingLocations">
+                                {'Operating Locations'}
+                            </NavItem>
+                            <NavDropdown title="Packages">
+                                <MenuItem eventKey="PackageTypes">
+                                    {'Package Types'}
+                                </MenuItem>
+                                <MenuItem eventKey="TrackingLogTypes">
+                                    {'Tracking Log Types'}
+                                </MenuItem>
+                            </NavDropdown>
+                            <NavDropdown title="Users">
+                                <MenuItem eventKey="Users">
+                                    {'Users'}
+                                </MenuItem>
+                                <MenuItem eventKey="UserTypes">
+                                    {'User Types'}
+                                </MenuItem>
+                            </NavDropdown>
+                            <NavDropdown title="Sprints">
+                                <MenuItem eventKey="Promotions">
+                                    {'Promotions'}
+                                </MenuItem>
+                                <MenuItem eventKey="Addons">
+                                    {'Addons'}
+                                </MenuItem>
+                                <MenuItem eventKey="SprintTags">
+                                    {'Tags'}
+                                </MenuItem>
+                            </NavDropdown>
+                            <NavItem eventKey="Clients">
+                                {'Clients'}
+                            </NavItem>
+                            <NavItem eventKey="Pages">
+                                {'Pages'}
+                            </NavItem>
+                            <NavItem eventKey="ServiceLevels">
+                                {'Service Levels'}
+                            </NavItem>
+                        </Nav>
+                    </Col>
+                    <Col xs={9}>
+                        <Tab.Content animation>
+                            {match.params.view === undefined ?
+                                <Button onClick={showForm(null)} bsStyle="success">Create</Button>
+                                :
+                                <Button onClick={history.goBack} bsStyle="link"><i className="fa fa-arrow-left"></i> Go Back</Button>
+                            }
+                            <Tab.Pane eventKey="OperatingLocations">
+                                {activeKey === 'OperatingLocations' &&
+                                    (match.params.view === undefined ?
+                                        <OperatingLocationView operatingLocations={operatingLocations} />
+                                        :
+                                        <OperatingLocationForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="PackageTypes">
+                                {activeKey === 'PackageTypes' &&
+                                    (match.params.view === undefined ?
+                                        <PackageTypeView packageTypes={packageTypes} />
+                                        :
+                                        <PackageTypeForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="TrackingLogTypes">
+                                {activeKey === 'TrackingLogTypes' &&
+                                    (match.params.view === undefined ?
+                                        <TrackingLogTypesView trackingLogTypes={trackingLogTypes} />
+                                        :
+                                        <TrackingLogTypesForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="Users">
+                                {activeKey === 'Users' &&
+                                    (match.params.view === undefined ?
+                                        <UserView users={users} match={match} history={history} />
+                                        :
+                                        <UserForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="UserTypes">
+                                {activeKey === 'UserTypes' &&
+                                    (match.params.view === undefined ?
+                                        <UserTypeView userTypes={userTypes} />
+                                        :
+                                        <UserTypeForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="Promotions">
+
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="Addons">
+                                {activeKey === 'Addons' &&
+                                    (match.params.view === undefined ?
+                                        <AddonView addons={addons} />
+                                        :
+                                        <AddonForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="SprintTags">
+                                {activeKey === 'SprintTags' &&
+                                    (match.params.view === undefined ?
+                                        ''
+                                        :
+                                        ''
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="Clients">
+                                {activeKey === 'Clients' &&
+                                    (match.params.view === undefined ?
+                                        <ClientView clients={clients} />
+                                        :
+                                        <ClientForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="Pages">
+                                {activeKey === 'Pages' &&
+                                    (match.params.view === undefined ?
+                                        <PageView pages={pages} />
+                                        :
+                                        <PageForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                            <Tab.Pane eventKey="ServiceLevels">
+                                {activeKey === 'ServiceLevels' &&
+                                    (match.params.view === undefined ?
+                                        <ServiceLevelView serviceLevels={serviceLevels} match={match} />
+                                        :
+                                        <ServiceLevelForm id={match.params.id} />
+                                    )
+                                }
+                            </Tab.Pane>
+                        </Tab.Content>
+                    </Col>
+                </Row>
+            </Tab.Container>
+        </Grid>
+    );
+}
 
 Setup.displayName = 'Setup Panel';
 
@@ -162,15 +224,18 @@ Setup.propTypes = {
 
 const mapStateToProps = state => ({
     operatingLocations: getOperatingLocations(state),
-    packageTypes: getPackageTypes(state),
-    clients: getClients(state),
+    packageTypes: state.packages.types,
+    trackingLogTypes: state.packages.trackingLogTypes,
+    clients: state.clients.all,
     pages: getPagesWithCreator(state),
-    addons: getAddons(state),
-    userTypes: getUserTypes(state)
+    addons: state.sprints.addons,
+    userTypes: state.users.types,
+    users: getUsersWithAddress(state),
+    serviceLevels: state.sprints.serviceLevels
 });
 
 const mapDispatchToProps = {
-    GetCountries
+
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Setup);

@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { reduxForm, Field } from 'redux-form';
 import { Button } from 'react-bootstrap';
 
-import { Authenticate } from '../Actions/Users.actions';
+import { Authenticate } from '../Modules/Users/Users.actions';
 
 import { TextboxRender, CheckboxRender } from './ReduxFormRender';
 
